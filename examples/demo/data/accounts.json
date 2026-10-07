@@ -1,0 +1,6 @@
+{
+  "records": [
+    {"attributes": {"type": "Account", "referenceId": "VipRef"}, "Name": "Stellar Widgets (fictional VIP)", "VIP__c": true, "Industry": "Manufacturing"},
+    {"attributes": {"type": "Account", "referenceId": "NormalRef"}, "Name": "Everyday Gadgets (fictional)", "VIP__c": false, "Industry": "Retail"}
+  ]
+}
