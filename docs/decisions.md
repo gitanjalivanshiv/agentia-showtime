@@ -1,0 +1,45 @@
+# Decisions
+
+## D1 — ffmpeg via `ffmpeg-static` (2026-10-07)
+Homebrew is not installed on the dev machine, and a system ffmpeg would be a setup hurdle for judges.
+Showtime depends on the `ffmpeg-static` npm package (ffmpeg 6.0, includes libx264 and aac).
+Resolution order in `src/edit/`: `SHOWTIME_FFMPEG` env var → system `ffmpeg` on PATH → `ffmpeg-static`.
+Captions are burned in from Playwright-rendered frames, so ffmpeg's `drawtext`/libfreetype is not needed.
+Note: ffmpeg-static has an npm install script; the plugin's `package.json` must allow it to run.
+This departs from the brief's "ffmpeg (system)".
+
+## D2 — Playground rules saved (2026-10-07)
+`~/hackathon/PLAYGROUND_RULES.md` was missing; created from the text the user supplied. Its environment-name blanks are still unfilled, so Showtime writes nothing to Copado until UAT/dev environments are named.
+
+## D3 — Initial commit before `agentia setup` (2026-10-07)
+`agentia setup skills create` runs `git rev-parse HEAD` and fails in a repo with no commits. `.agents/`, `.agentia/` and `AGENTS.md` are git-ignored per the playground rules.
+
+## D4 — Proposed write-back (pending user approval)
+No comment/note command exists. Proposal: `work update --status` is avoided (shared pipeline statuses); instead append a dated "Showtime review" block to `--technical-specifications` (30000 chars) for decisions and feedback, keep the full log in `.showtime/`, and notify the release channel in Slack.
+
+## D5 — Proposed capture approach (pending verification)
+Live session (A): step-aligned by construction (execute a line, then screenshot). Needs a CRT project and job first. Job run (B) not tested. Element coordinates unknown; check `testing live inspect` output once a session runs.
+
+## D4 update — write-back approved (2026-10-07)
+User approved: append a dated "Showtime review" block to the story's `--technical-specifications`; full log in `.showtime/`; release manager notified in Slack. Never touch `--status`.
+
+## D6 — Pipeline shape (2026-10-07, from user screenshot)
+Dev1-SFP, Dev2-SFP → INT-SFP → UAT-SFP → Production-SFP; Hotfix-SFP → Production-SFP. UAT-SFP's source is INT-SFP. Mutant stories were seen on INT-SFP, so Showtime must not write there. Showtime dev source is still undecided.
+
+## D7 — CRT project creation blocked (2026-10-07)
+`testing project create --name Showtime` returned HTTP 403 (TestingGatewayError). Lock was taken and released. No project exists. Likely the PAK lacks create-project permission; to be fixed in the CRT UI.
+
+## D8 — Slack limits (researched 2026-10-07)
+Free workspace: 90-day visible history, up to 10 third-party/custom apps, 5 GB shared file storage, throttling of bursts of messages/files. Socket Mode: up to 10 connections, no plan restriction stated, not allowed on the public Marketplace (irrelevant for a hackathon). A free Slack Developer Program sandbox (Enterprise Grid, up to 10 sandboxes, 180 days, all paid features) is the best choice. Per-file upload size and inline playback of `files.uploadV2` video are not confirmed by these sources and must be tested.
+
+## D9 — CRT lives on a different domain/org (2026-10-07)
+The 403 came from the globally stored CRT auth, which pointed at a different CRT domain and organization than the Showtime project. Showtime needs project-local CRT auth (`agentia auth set --local --crt <pak> --crt-domain <domain> --crt-org <org-id>`) so the global auth used by Time Machine and Mutant is not changed. Credentials are entered by the user, never by Claude.
+
+## D10 — Environment ownership (2026-10-07)
+Time Machine used Dev1-SFP, Mutant used Dev2-SFP. Showtime's UAT is UAT-SFP (source INT-SFP). Showtime's dev source is still undecided. Playground rules file deferred by the user.
+
+## D11 — Plugin scaffolded by hand (2026-10-07)
+`npm init @copado/agentia-plugin` is interactive and exits on piped input, so the plugin layout was written by hand, mirroring the structure of the sibling Agentia plugins (oclif, ESM, `commands: ./dist/commands`, topic `showtime`). It links and runs with `agentia plugins link .`.
+
+## D12 — Local CRT auth and the Showtime config (2026-10-07)
+CRT credentials for Showtime are project-local (`agentia auth set --local`), so `doctor` and every client call run with `cwd` = the project root. Config lives in git-ignored `.showtime/config.json`: UAT-SFP, dev source INT-SFP, CRT project ID in the config.

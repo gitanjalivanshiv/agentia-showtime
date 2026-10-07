@@ -1,0 +1,4 @@
+{"result":{"credentials":[
+ {"type":"cicd","set":true,"label":"Copado API key (CICD)","masked":"xxxxx...xxxxx"},
+ {"type":"crt","set":true,"ready":true,"domain":"crt.example.com","orgId":"1","source":"local","issues":[]},
+ {"type":"ai","set":true,"domain":"crt.example.com","orgId":"1"}]},"status":0}

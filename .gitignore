@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.showtime/
+fixtures/raw/
+.agents/
+.agentia/
+AGENTS.md
+docs/_help*.txt
+.DS_Store

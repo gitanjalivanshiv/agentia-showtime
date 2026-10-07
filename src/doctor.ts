@@ -1,0 +1,221 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+import {execa} from 'execa'
+
+import type {AgentiaClient} from './agentia/client.js'
+import {Copado} from './agentia/copado.js'
+import {loadConfig} from './config.js'
+import {resolveFfmpeg} from './util/ffmpeg.js'
+
+export type CheckStatus = 'ok' | 'warn' | 'fail'
+export interface Check {
+  id: string
+  label: string
+  status: CheckStatus
+  detail: string
+  /** Plain-English fix, shown for anything that is not ok. */
+  fix?: string
+}
+
+export interface DoctorDeps {
+  root: string
+  client: AgentiaClient
+  env?: NodeJS.ProcessEnv
+  nodeVersion?: string
+  /** Lists macOS `say` voices; injectable for tests. */
+  sayVoices?: () => Promise<string[] | undefined>
+}
+
+/** Names of keys in a .env file. Values are never read into results. */
+export function envKeys(root: string): Set<string> {
+  const file = path.join(root, '.env')
+  if (!fs.existsSync(file)) return new Set()
+  const keys = fs
+    .readFileSync(file, 'utf8')
+    .split('\n')
+    .map((l) => /^\s*([A-Z0-9_]+)\s*=\s*\S/.exec(l)?.[1])
+    .filter((k): k is string => Boolean(k))
+  return new Set(keys)
+}
+
+async function listSayVoices(): Promise<string[] | undefined> {
+  const r = await execa('say', ['-v', '?'], {reject: false, timeout: 15_000})
+  if (r.failed || typeof r.stdout !== 'string') return undefined
+  return r.stdout
+    .split('\n')
+    .map((l) => l.split(/\s{2,}/)[0]?.trim() ?? '')
+    .filter(Boolean)
+}
+
+const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
+
+export async function runDoctor(deps: DoctorDeps): Promise<Check[]> {
+  const env = deps.env ?? process.env
+  const copado = new Copado(deps.client, deps.root)
+  const checks: Check[] = []
+  const add = (c: Check) => checks.push(c)
+
+  const major = Number((deps.nodeVersion ?? process.versions.node).split('.')[0])
+  add(
+    major >= 20
+      ? {id: 'node', label: 'Node.js', status: 'ok', detail: `v${deps.nodeVersion ?? process.versions.node}`}
+      : {
+          id: 'node',
+          label: 'Node.js',
+          status: 'fail',
+          detail: 'Node 20 or newer is required',
+          fix: 'Install Node 20+ (for example with nvm).',
+        },
+  )
+
+  // CRT auth is separate from CICD and AI auth (brief §2.5).
+  let crtReady = false
+  try {
+    const crt = await copado.crtAuth()
+    crtReady = crt?.ready === true
+    add(
+      crtReady
+        ? {
+            id: 'crt-auth',
+            label: 'Robotic Testing sign-in',
+            status: 'ok',
+            detail: `ready (${crt?.source ?? 'unknown'} credentials)`,
+          }
+        : {
+            id: 'crt-auth',
+            label: 'Robotic Testing sign-in',
+            status: 'fail',
+            detail: 'CRT credentials are missing or not ready',
+            fix: 'Run `agentia auth set --local --crt <pak> --crt-domain <domain> --crt-org <org-id>` in this folder.',
+          },
+    )
+  } catch (e) {
+    add({
+      id: 'crt-auth',
+      label: 'Robotic Testing sign-in',
+      status: 'fail',
+      detail: message(e),
+      fix: 'Check that `agentia` is installed and on your PATH, then run `agentia setup`.',
+    })
+  }
+
+  try {
+    const creds = await copado.auth()
+    for (const [type, label, fix] of [
+      ['cicd', 'Copado API key', 'Run `agentia setup` and add your Copado API key.'],
+      ['ai', 'Copado AI sign-in', 'Run `agentia setup` and configure Copado AI.'],
+    ] as const) {
+      const c = creds.find((x) => x.type === type)
+      add(
+        c?.set
+          ? {id: `${type}-auth`, label, status: 'ok', detail: 'configured'}
+          : {id: `${type}-auth`, label, status: 'fail', detail: 'not configured', fix},
+      )
+    }
+  } catch (e) {
+    add({id: 'cicd-auth', label: 'Copado sign-in', status: 'fail', detail: message(e)})
+  }
+
+  const loaded = loadConfig(deps.root)
+  if (!loaded.ok) {
+    add({
+      id: 'config',
+      label: 'Showtime config',
+      status: 'fail',
+      detail:
+        loaded.reason === 'missing' ? '.showtime/config.json not found' : `invalid config: ${loaded.message}`,
+      fix: 'Run `agentia showtime init`.',
+    })
+  } else {
+    const cfg = loaded.config
+    add({
+      id: 'config',
+      label: 'Showtime config',
+      status: 'ok',
+      detail: `UAT ${cfg.uatEnvironment}, CRT project ${cfg.crtProjectId}`,
+    })
+    if (crtReady) {
+      try {
+        const projects = await copado.crtProjects()
+        const p = projects.find((x) => x.id === cfg.crtProjectId)
+        add(
+          p
+            ? {id: 'crt-project', label: 'CRT project', status: 'ok', detail: `"${p.name}" is reachable`}
+            : {
+                id: 'crt-project',
+                label: 'CRT project',
+                status: 'fail',
+                detail: `project ${cfg.crtProjectId} is not visible to this sign-in`,
+                fix: 'Check the project ID in .showtime/config.json and that the CRT organization matches.',
+              },
+        )
+      } catch (e) {
+        add({id: 'crt-project', label: 'CRT project', status: 'fail', detail: message(e)})
+      }
+    }
+  }
+
+  const ff = await resolveFfmpeg(env)
+  add(
+    ff
+      ? {id: 'ffmpeg', label: 'ffmpeg', status: 'ok', detail: `${ff.version} (${ff.source})`}
+      : {
+          id: 'ffmpeg',
+          label: 'ffmpeg',
+          status: 'fail',
+          detail: 'no ffmpeg found',
+          fix: 'Run `npm install` (ffmpeg-static is bundled) or set SHOWTIME_FFMPEG to an ffmpeg binary.',
+        },
+  )
+
+  const voices = await (deps.sayVoices ?? listSayVoices)()
+  if (!voices) {
+    add({
+      id: 'say',
+      label: 'Narration voice (macOS say)',
+      status: 'fail',
+      detail: '`say` is not available',
+      fix: 'Narration uses macOS `say`. Run on a Mac, or configure another voice provider.',
+    })
+  } else if (loaded.ok && !voices.includes(loaded.config.voice.name)) {
+    add({
+      id: 'say',
+      label: 'Narration voice (macOS say)',
+      status: 'warn',
+      detail: `voice "${loaded.config.voice.name}" is not installed`,
+      fix: 'Pick an installed voice (`say -v ?`) and set it in .showtime/config.json, or download it in System Settings → Accessibility → Spoken Content.',
+    })
+  } else {
+    add({
+      id: 'say',
+      label: 'Narration voice (macOS say)',
+      status: 'ok',
+      detail: `${voices.length} voices available`,
+    })
+  }
+
+  // Slack arrives in Phase 6, so missing tokens warn instead of fail. Only key presence is checked.
+  const fromFile = envKeys(deps.root)
+  const missing = ['SLACK_BOT_TOKEN', 'SLACK_APP_TOKEN'].filter((k) => !env[k] && !fromFile.has(k))
+  add(
+    missing.length === 0
+      ? {
+          id: 'slack',
+          label: 'Slack tokens',
+          status: 'ok',
+          detail: 'present (connection is tested when the Review Hub starts)',
+        }
+      : {
+          id: 'slack',
+          label: 'Slack tokens',
+          status: 'warn',
+          detail: `${missing.join(', ')} not set`,
+          fix: 'Follow docs/slack-setup.md, then add the tokens to .env (never commit it).',
+        },
+  )
+
+  return checks
+}
+
+export const hasFailures = (checks: Check[]) => checks.some((c) => c.status === 'fail')
