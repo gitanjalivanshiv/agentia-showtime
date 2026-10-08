@@ -43,3 +43,11 @@ Time Machine used Dev1-SFP, Mutant used Dev2-SFP. Showtime's UAT is UAT-SFP (sou
 
 ## D12 — Local CRT auth and the Showtime config (2026-10-07)
 CRT credentials for Showtime are project-local (`agentia auth set --local`), so `doctor` and every client call run with `cwd` = the project root. Config lives in git-ignored `.showtime/config.json`: UAT-SFP, dev source INT-SFP, CRT project ID in the config.
+
+## D13 — Capture approach: job runs (B), not live sessions (A) (2026-10-08)
+Measured on the Showtime CRT project:
+- **A. Live session:** `testing live screenshot` always returns an annotated overlay (dimmed page, numbered coloured boxes). It cannot be switched off with `set-options`, and it survives navigation. Unusable as a video frame. `testing live inspect` lists elements (selector, label, xPath) but gives no coordinates. Start takes about 15 s.
+- **B. Job run:** a robot that calls `LogScreenshot` after each step produces clean 1920×993 PNGs. `testing build run --wait-for-result --save-artifacts <file>` writes a zip with `output.xml`, `log.html`, `report.html`, `xunit_report.xml` and `screenshots/`. One short test took about a minute.
+Decision: record with B. Showtime generates a Robot Framework file from `script.yaml`, uploads it with `testing job upload --replace`, runs it, unpacks the zip, and maps screenshots to steps with `Log SHOWTIME_STEP:<id>` marker keywords found in `output.xml`.
+Highlight boxes: no element coordinates are available from the CLI. If wanted, a step can inject an outline onto the target element with `Execute JavaScript` just before `LogScreenshot`.
+Credentials: CRT variables `UAT_USERNAME` and `UAT_PASSWORD` (sensitive) are read by the robot; the password is typed with `TypeSecret`. Showtime never sees the value.
