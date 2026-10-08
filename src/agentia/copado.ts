@@ -29,6 +29,9 @@ export const storySchema = z
     sourceEnvironmentName: z.string().optional(),
     lastModifiedDate: z.string().optional(),
     acceptanceCriteria: z.string().optional(),
+    asA: z.string().optional(),
+    wantTo: z.string().optional(),
+    soThat: z.string().optional(),
     technicalSpecifications: z.string().optional(),
   })
   .passthrough()

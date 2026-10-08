@@ -1,0 +1,50 @@
+# Hand-written fallback for the demo story. Showtime uses it when Copado AI's answer is unusable.
+version: 1
+story:
+  name: US-FALLBACK
+  title: Showtime Demo – VIP Case Escalation
+source: fallback
+feature: VIP Case Escalation
+summary:
+  - Accounts now have a VIP checkbox.
+  - A new case on a VIP account is set to High priority automatically.
+  - The case shows a VIP badge, so your team sees it at a glance.
+steps:
+  - id: open-accounts
+    action: navigate
+    target: Accounts
+    caption: Open the Accounts list
+    narration: Let's start in Accounts, where your service team finds every customer.
+  - id: open-vip-account
+    action: click
+    target: Stellar Widgets (fictional VIP)
+    caption: Open a VIP customer
+    narration: Here's one of your VIP customers. The new VIP checkbox marks them as someone special.
+  - id: new-case
+    action: click
+    target: New Case
+    caption: Create a new case
+    narration: Now this customer calls with a problem, so you open a new case for them.
+  - id: type-subject
+    action: type
+    target: Subject
+    value: Order portal is down
+    caption: Describe the problem
+    narration: You describe the problem in a few words. That's all your agent has to do.
+  - id: save-case
+    action: click
+    target: Save
+    caption: Save the case
+    narration: You save the case, and the new automation takes over from here.
+  - id: verify-priority
+    action: verify
+    target: Priority
+    value: High
+    caption: Priority is High, automatically
+    narration: Priority was set to High for you. Nobody had to remember to escalate it.
+  - id: verify-badge
+    action: verify
+    target: VIP Badge
+    value: VIP CUSTOMER
+    caption: The VIP badge shows
+    narration: And the VIP badge makes sure the whole team knows this customer comes first.
