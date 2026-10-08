@@ -18,6 +18,10 @@
                 <behavior>Edit</behavior>
                 <field>Industry</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>ParentId</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>
