@@ -153,6 +153,26 @@ export async function runDoctor(deps: DoctorDeps): Promise<Check[]> {
       } catch (e) {
         add({id: 'crt-project', label: 'CRT project', status: 'fail', detail: message(e)})
       }
+      try {
+        const jobs = await copado.crtJobs(cfg.crtProjectId)
+        const j = cfg.crtJobId === undefined ? undefined : jobs.find((x) => x.id === cfg.crtJobId)
+        add(
+          j
+            ? {id: 'crt-job', label: 'CRT recorder job', status: 'ok', detail: `"${j.name}" is reachable`}
+            : {
+                id: 'crt-job',
+                label: 'CRT recorder job',
+                status: 'fail',
+                detail:
+                  cfg.crtJobId === undefined
+                    ? 'no crtJobId in the config'
+                    : `job ${cfg.crtJobId} was not found`,
+                fix: 'Create a job named "Showtime Recorder" in the CRT project, then run `agentia showtime init --force`.',
+              },
+        )
+      } catch (e) {
+        add({id: 'crt-job', label: 'CRT recorder job', status: 'fail', detail: message(e)})
+      }
     }
   }
 

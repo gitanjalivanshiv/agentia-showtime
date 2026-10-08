@@ -32,6 +32,10 @@ export default class Init extends ShowtimeCommand {
       description: 'Slack channel for release managers',
       default: DEFAULT_CONFIG.slack.releaseChannel,
     }),
+    'crt-job': Flags.integer({
+      description:
+        'CRT job that hosts recordings (auto-detected when a job named "Showtime Recorder" exists)',
+    }),
     voice: Flags.string({description: 'macOS `say` voice', default: DEFAULT_CONFIG.voice.name}),
     rate: Flags.integer({description: 'Speech rate in words per minute', default: DEFAULT_CONFIG.voice.rate}),
     force: Flags.boolean({description: 'Overwrite an existing config'}),
@@ -67,10 +71,21 @@ export default class Init extends ShowtimeCommand {
       )
     }
 
+    let crtJobId = flags['crt-job']
+    if (crtJobId === undefined) {
+      try {
+        const jobs = await new Copado(createAgentiaClient(root), root).crtJobs(crtProjectId)
+        crtJobId = jobs.find((j) => j.name.toLowerCase() === 'showtime recorder')?.id
+      } catch {
+        // Optional: recording needs it, but init can run before the job exists.
+      }
+    }
+
     const config = configSchema.parse({
       uatEnvironment: flags['uat-environment'],
       devEnvironment: flags['dev-environment'],
       crtProjectId,
+      crtJobId,
       slack: {ownersChannel: flags['owners-channel'], releaseChannel: flags['release-channel']},
       voice: {name: flags.voice, rate: flags.rate},
       storyPrefix: DEFAULT_CONFIG.storyPrefix,

@@ -17,13 +17,17 @@ beforeEach(() => {
 afterEach(() => fs.rmSync(root, {recursive: true, force: true}))
 
 const client = (auth = read('auth-get.json')) =>
-  new FakeAgentiaClient({'auth get': auth, 'testing project list': read('project-list.json')})
+  new FakeAgentiaClient({
+    'auth get': auth,
+    'testing project list': read('project-list.json'),
+    'testing job list': read('job-list.json'),
+  })
 const byId = (checks: Awaited<ReturnType<typeof runDoctor>>, id: string) => checks.find((c) => c.id === id)
 const voices = async () => ['Samantha', 'Albert']
 
 describe('doctor', () => {
   it('is all green with config, auth, ffmpeg, voice and Slack tokens', async () => {
-    saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001}))
+    saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001, crtJobId: 2001}))
     fs.writeFileSync(path.join(root, '.env'), 'SLACK_BOT_TOKEN=xoxb-fake\nSLACK_APP_TOKEN=xapp-fake\n')
     const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
     expect(checks.filter((c) => c.status !== 'ok')).toEqual([])
@@ -79,5 +83,13 @@ describe('doctor', () => {
       nodeVersion: '18.0.0',
     })
     expect(byId(checks, 'node')?.status).toBe('fail')
+  })
+})
+
+describe('doctor: recorder job', () => {
+  it('fails with a fix when the config has no crtJobId', async () => {
+    saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001}))
+    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    expect(byId(checks, 'crt-job')).toMatchObject({status: 'fail'})
   })
 })

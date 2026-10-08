@@ -42,6 +42,9 @@ const workListSchema = z.object({data: z.array(storySchema), hasMore: z.boolean(
 const crtProjectSchema = z.object({id: z.number(), name: z.string()}).passthrough()
 export type CrtProject = z.infer<typeof crtProjectSchema>
 
+const crtJobSchema = z.object({id: z.number(), name: z.string()}).passthrough()
+export type CrtJob = z.infer<typeof crtJobSchema>
+
 const askSchema = z.object({content: z.string()}).passthrough()
 
 export class Copado {
@@ -81,5 +84,52 @@ export class Copado {
       {cwd: this.cwd, schema: askSchema, timeoutMs: 120_000},
     )
     return r.content
+  }
+
+  async crtJobs(projectId: number): Promise<CrtJob[]> {
+    return this.client.run(['testing', 'job', 'list', '-p', String(projectId)], {
+      cwd: this.cwd,
+      schema: z.array(crtJobSchema),
+    })
+  }
+
+  /** Replaces one file in a CRT job. A write: the caller holds the org lock. */
+  async uploadRobot(projectId: number, jobId: number, localFile: string, remoteName: string): Promise<void> {
+    await this.client.run(
+      [
+        'testing',
+        'job',
+        'upload',
+        String(jobId),
+        '-p',
+        String(projectId),
+        '--replace',
+        `${localFile}:${remoteName}`,
+        '--message',
+        'Showtime recording',
+      ],
+      {cwd: this.cwd},
+    )
+  }
+
+  /** Runs the job and waits. Artifacts (zip) are written to `archivePath`. Returns the build ID. */
+  async runBuild(projectId: number, jobId: number, archivePath: string): Promise<number | undefined> {
+    const r = await this.client.run<{build?: {data?: {id?: number}}}>(
+      [
+        'testing',
+        'build',
+        'run',
+        String(jobId),
+        '-p',
+        String(projectId),
+        '--wait-for-result',
+        '--timeout',
+        '900',
+        '--save-artifacts',
+        archivePath,
+      ],
+      {cwd: this.cwd, timeoutMs: 20 * 60 * 1000},
+    )
+    return r.build?.data?.id
   }
 }

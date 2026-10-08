@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import {stringify} from 'yaml'
+import {parse as parseYaml, stringify} from 'yaml'
 
 import {CONFIG_DIR} from '../config.js'
-import type {DemoScript} from './schema.js'
+import {type DemoScript, scriptSchema} from './schema.js'
 
 export const showDir = (root: string, storyName: string) => path.join(root, CONFIG_DIR, 'shows', storyName)
 export const scriptPath = (root: string, storyName: string) =>
@@ -23,4 +23,11 @@ export function writeScript(root: string, script: DemoScript): string {
   fs.mkdirSync(path.dirname(file), {recursive: true})
   fs.writeFileSync(file, toYaml(script))
   return file
+}
+
+export function readScript(root: string, storyName: string): DemoScript {
+  const file = scriptPath(root, storyName)
+  if (!fs.existsSync(file))
+    throw new Error(`No script for ${storyName}. Run \`agentia showtime script ${storyName}\` first.`)
+  return scriptSchema.parse(parseYaml(fs.readFileSync(file, 'utf8')))
 }

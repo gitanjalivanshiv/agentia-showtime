@@ -9,6 +9,10 @@ export const configSchema = z.object({
   /** Environment the story is developed in (informational; Showtime never writes there). */
   devEnvironment: z.string().min(1),
   crtProjectId: z.number().int().positive(),
+  /** CRT job that hosts the generated robot suite ("Showtime Recorder"). */
+  crtJobId: z.number().int().positive().optional(),
+  /** Where the robot signs in. Sandboxes use test.salesforce.com. */
+  loginUrl: z.string().url().default('https://test.salesforce.com'),
   slack: z.object({ownersChannel: z.string().min(1), releaseChannel: z.string().min(1)}),
   voice: z.object({name: z.string().min(1), rate: z.number().int().positive()}),
   storyPrefix: z.string().min(1).default('Showtime Demo –'),
@@ -18,7 +22,8 @@ export type ShowtimeConfig = z.infer<typeof configSchema>
 export const CONFIG_DIR = '.showtime'
 export const configPath = (root: string) => path.join(root, CONFIG_DIR, 'config.json')
 
-export const DEFAULT_CONFIG: Omit<ShowtimeConfig, 'crtProjectId'> = {
+export const DEFAULT_CONFIG: Omit<ShowtimeConfig, 'crtProjectId' | 'crtJobId'> = {
+  loginUrl: 'https://test.salesforce.com',
   uatEnvironment: 'UAT-SFP',
   devEnvironment: 'INT-SFP',
   slack: {ownersChannel: '#uat-reviews', releaseChannel: '#release'},
