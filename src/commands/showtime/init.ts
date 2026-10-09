@@ -36,6 +36,10 @@ export default class Init extends ShowtimeCommand {
       description:
         'CRT job that hosts recordings (auto-detected when a job named "Showtime Recorder" exists)',
     }),
+    'sf-alias': Flags.string({
+      description: 'Salesforce CLI alias of the UAT org',
+      default: DEFAULT_CONFIG.sfAlias,
+    }),
     voice: Flags.string({description: 'macOS `say` voice', default: DEFAULT_CONFIG.voice.name}),
     rate: Flags.integer({description: 'Speech rate in words per minute', default: DEFAULT_CONFIG.voice.rate}),
     force: Flags.boolean({description: 'Overwrite an existing config'}),
@@ -86,6 +90,7 @@ export default class Init extends ShowtimeCommand {
       devEnvironment: flags['dev-environment'],
       crtProjectId,
       crtJobId,
+      sfAlias: flags['sf-alias'],
       slack: {ownersChannel: flags['owners-channel'], releaseChannel: flags['release-channel']},
       voice: {name: flags.voice, rate: flags.rate},
       storyPrefix: DEFAULT_CONFIG.storyPrefix,

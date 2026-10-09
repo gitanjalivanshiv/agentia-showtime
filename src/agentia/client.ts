@@ -43,7 +43,10 @@ export function describeCommand(args: string[]): string {
   for (let i = 0; i < args.length; i++) {
     const a = args[i] as string
     out.push(a)
-    if (/^--(crt|cicd|ai|value|git-password)$/.test(a) && i + 1 < args.length) {
+    if (/^--variable$/.test(a) && /^FRONTDOOR_URL[:=]/.test(args[i + 1] ?? '')) {
+      out.push('FRONTDOOR_URL:***')
+      i++
+    } else if (/^--(crt|cicd|ai|value|git-password)$/.test(a) && i + 1 < args.length) {
       out.push('***')
       i++
     }

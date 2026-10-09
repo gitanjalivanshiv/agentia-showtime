@@ -113,7 +113,12 @@ export class Copado {
   }
 
   /** Runs the job and waits. Artifacts (zip) are written to `archivePath`. Returns the build ID. */
-  async runBuild(projectId: number, jobId: number, archivePath: string): Promise<number | undefined> {
+  async runBuild(
+    projectId: number,
+    jobId: number,
+    archivePath: string,
+    variables: string[] = [],
+  ): Promise<number | undefined> {
     const r = await this.client.run<{build?: {data?: {id?: number}}}>(
       [
         'testing',
@@ -127,6 +132,7 @@ export class Copado {
         '900',
         '--save-artifacts',
         archivePath,
+        ...variables.flatMap((v) => ['--variable', v]),
       ],
       {cwd: this.cwd, timeoutMs: 20 * 60 * 1000},
     )

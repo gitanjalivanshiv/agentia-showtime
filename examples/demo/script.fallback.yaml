@@ -19,32 +19,31 @@ steps:
     action: click
     target: Stellar Widgets (fictional VIP)
     caption: Open a VIP customer
-    narration: Here's one of your VIP customers. The new VIP checkbox marks them as someone special.
+    narration: Here's one of your VIP customers. Notice nothing special to remember when a case comes in.
   - id: new-case
     action: click
     target: New Case
     caption: Create a new case
-    narration: Now this customer calls with a problem, so you open a new case for them.
+    narration: Now this customer calls with a problem, so your agent opens a new case for them.
   - id: type-subject
     action: type
     target: Subject
     value: Order portal is down
     caption: Describe the problem
-    narration: You describe the problem in a few words. That's all your agent has to do.
+    narration: They describe the problem in a few words. That's all your agent has to do.
   - id: save-case
     action: click
     target: Save
     caption: Save the case
-    narration: You save the case, and the new automation takes over from here.
-  - id: verify-priority
+    narration: They save the case, and the new automation takes over from here.
+  - id: open-case
+    action: click
+    target: was created
+    caption: Open the new case
+    narration: Let's open the case that was just created, to see what happened behind the scenes.
+  - id: verify-result
     action: verify
     target: Priority
-    value: High
-    caption: Priority is High, automatically
-    narration: Priority was set to High for you. Nobody had to remember to escalate it.
-  - id: verify-badge
-    action: verify
-    target: VIP Badge
-    value: VIP CUSTOMER
-    caption: The VIP badge shows
-    narration: And the VIP badge makes sure the whole team knows this customer comes first.
+    value: High | VIP CUSTOMER
+    caption: High priority and a VIP badge
+    narration: Priority is High, and the VIP badge shows. Nobody had to escalate anything by hand.

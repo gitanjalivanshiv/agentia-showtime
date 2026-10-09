@@ -11,8 +11,8 @@ export const configSchema = z.object({
   crtProjectId: z.number().int().positive(),
   /** CRT job that hosts the generated robot suite ("Showtime Recorder"). */
   crtJobId: z.number().int().positive().optional(),
-  /** Where the robot signs in. Sandboxes use test.salesforce.com. */
-  loginUrl: z.string().url().default('https://test.salesforce.com'),
+  /** Salesforce CLI alias of the UAT org. Recording logs in with a one-time link from `sf org open`. */
+  sfAlias: z.string().min(1).default('showtime-uat'),
   slack: z.object({ownersChannel: z.string().min(1), releaseChannel: z.string().min(1)}),
   voice: z.object({name: z.string().min(1), rate: z.number().int().positive()}),
   storyPrefix: z.string().min(1).default('Showtime Demo –'),
@@ -23,7 +23,7 @@ export const CONFIG_DIR = '.showtime'
 export const configPath = (root: string) => path.join(root, CONFIG_DIR, 'config.json')
 
 export const DEFAULT_CONFIG: Omit<ShowtimeConfig, 'crtProjectId' | 'crtJobId'> = {
-  loginUrl: 'https://test.salesforce.com',
+  sfAlias: 'showtime-uat',
   uatEnvironment: 'UAT-SFP',
   devEnvironment: 'INT-SFP',
   slack: {ownersChannel: '#uat-reviews', releaseChannel: '#release'},

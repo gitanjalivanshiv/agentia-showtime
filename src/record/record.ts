@@ -22,14 +22,15 @@ export interface RecordOptions {
   copado: Copado
   crtProjectId: number
   crtJobId: number
-  loginUrl: string
+  /** Returns a fresh one-time login link for the UAT org. Never logged or saved. */
+  frontdoor: () => Promise<string>
 }
 
 /** Robot file for this story, before upload. Written so a human can read exactly what will run. */
-export function writeRobotFile(root: string, script: DemoScript, loginUrl: string): string {
+export function writeRobotFile(root: string, script: DemoScript): string {
   const file = path.join(showDir(root, script.story.name), 'session.robot')
   fs.mkdirSync(path.dirname(file), {recursive: true})
-  fs.writeFileSync(file, generateRobot(script, {loginUrl}))
+  fs.writeFileSync(file, generateRobot(script))
   return file
 }
 
@@ -39,11 +40,13 @@ export function writeRobotFile(root: string, script: DemoScript, loginUrl: strin
  */
 export async function recordShow(o: RecordOptions): Promise<Recording> {
   const dir = showDir(o.root, o.script.story.name)
-  const robot = writeRobotFile(o.root, o.script, o.loginUrl)
+  const robot = writeRobotFile(o.root, o.script)
   const archive = path.join(dir, 'artifacts.zip')
 
   await o.copado.uploadRobot(o.crtProjectId, o.crtJobId, robot, 'showtime-session.robot')
-  const buildId = await o.copado.runBuild(o.crtProjectId, o.crtJobId, archive)
+  const buildId = await o.copado.runBuild(o.crtProjectId, o.crtJobId, archive, [
+    `FRONTDOOR_URL:${await o.frontdoor()}`,
+  ])
   if (!fs.existsSync(archive))
     throw new Error('The run finished without an artifact archive. Check the build in Robotic Testing.')
 

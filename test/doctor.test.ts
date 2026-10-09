@@ -29,13 +29,25 @@ describe('doctor', () => {
   it('is all green with config, auth, ffmpeg, voice and Slack tokens', async () => {
     saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001, crtJobId: 2001}))
     fs.writeFileSync(path.join(root, '.env'), 'SLACK_BOT_TOKEN=xoxb-fake\nSLACK_APP_TOKEN=xapp-fake\n')
-    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(checks.filter((c) => c.status !== 'ok')).toEqual([])
     expect(hasFailures(checks)).toBe(false)
   })
 
   it('fails with a fix when config is missing', async () => {
-    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(byId(checks, 'config')).toMatchObject({status: 'fail', fix: 'Run `agentia showtime init`.'})
     expect(hasFailures(checks)).toBe(true)
   })
@@ -43,25 +55,49 @@ describe('doctor', () => {
   it('fails when CRT is not ready, and tells the user the exact command', async () => {
     const auth = read('auth-get.json')
     auth.result.credentials[1].ready = false
-    const checks = await runDoctor({root, client: client(auth), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(auth),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(byId(checks, 'crt-auth')?.status).toBe('fail')
     expect(byId(checks, 'crt-auth')?.fix).toContain('agentia auth set --local --crt')
   })
 
   it('fails when the configured CRT project is not visible', async () => {
     saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 999}))
-    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(byId(checks, 'crt-project')?.status).toBe('fail')
   })
 
   it('warns, not fails, when Slack tokens are missing', async () => {
-    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(byId(checks, 'slack')?.status).toBe('warn')
   })
 
   it('never reports secret values from .env', async () => {
     fs.writeFileSync(path.join(root, '.env'), 'SLACK_BOT_TOKEN=xoxb-SUPERSECRET\n')
-    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(JSON.stringify(checks)).not.toContain('SUPERSECRET')
   })
 
@@ -70,7 +106,13 @@ describe('doctor', () => {
       root,
       configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001, voice: {name: 'Zelda', rate: 170}}),
     )
-    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(byId(checks, 'say')?.status).toBe('warn')
   })
 
@@ -89,7 +131,28 @@ describe('doctor', () => {
 describe('doctor: recorder job', () => {
   it('fails with a fix when the config has no crtJobId', async () => {
     saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001}))
-    const checks = await runDoctor({root, client: client(), sayVoices: voices, env: {}})
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
     expect(byId(checks, 'crt-job')).toMatchObject({status: 'fail'})
+  })
+})
+
+describe('doctor: UAT org login', () => {
+  it('fails with the exact login command when the org is not authorized', async () => {
+    saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001, crtJobId: 2001}))
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: false, detail: 'not authorized'}),
+      env: {},
+    })
+    expect(byId(checks, 'uat-org')?.status).toBe('fail')
+    expect(byId(checks, 'uat-org')?.fix).toContain('sf org login web --alias showtime-uat')
   })
 })

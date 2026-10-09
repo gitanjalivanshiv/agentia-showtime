@@ -6,6 +6,7 @@ import {execa} from 'execa'
 import type {AgentiaClient} from './agentia/client.js'
 import {Copado} from './agentia/copado.js'
 import {loadConfig} from './config.js'
+import {checkSfOrg} from './record/frontdoor.js'
 import {resolveFfmpeg} from './util/ffmpeg.js'
 
 export type CheckStatus = 'ok' | 'warn' | 'fail'
@@ -25,6 +26,8 @@ export interface DoctorDeps {
   nodeVersion?: string
   /** Lists macOS `say` voices; injectable for tests. */
   sayVoices?: () => Promise<string[] | undefined>
+  /** Checks the Salesforce CLI alias of the UAT org; injectable for tests. */
+  sfOrg?: (alias: string) => Promise<{ok: boolean; detail: string}>
 }
 
 /** Names of keys in a .env file. Values are never read into results. */
@@ -135,6 +138,18 @@ export async function runDoctor(deps: DoctorDeps): Promise<Check[]> {
       status: 'ok',
       detail: `UAT ${cfg.uatEnvironment}, CRT project ${cfg.crtProjectId}`,
     })
+    const sf = await (deps.sfOrg ?? ((a: string) => checkSfOrg(a, env)))(cfg.sfAlias)
+    add(
+      sf.ok
+        ? {id: 'uat-org', label: 'UAT org login (Salesforce CLI)', status: 'ok', detail: sf.detail}
+        : {
+            id: 'uat-org',
+            label: 'UAT org login (Salesforce CLI)',
+            status: 'fail',
+            detail: sf.detail,
+            fix: `Authorize the UAT org once: sf org login web --alias ${cfg.sfAlias} --instance-url <your UAT org URL>`,
+          },
+    )
     if (crtReady) {
       try {
         const projects = await copado.crtProjects()

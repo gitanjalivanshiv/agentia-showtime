@@ -5,7 +5,7 @@ import path from 'node:path'
 import {zipSync} from 'fflate'
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 
-import {FakeAgentiaClient} from '../src/agentia/client.js'
+import {describeCommand, FakeAgentiaClient} from '../src/agentia/client.js'
 import {Copado} from '../src/agentia/copado.js'
 import {LockBusyError, withOrgLock} from '../src/lock.js'
 import {parseOutput} from '../src/record/parse.js'
@@ -24,11 +24,11 @@ const outputXml = (steps: Array<[string, boolean]>) =>
   `<robot>${steps.map(([id, ok]) => `${msg(`SHOWTIME_STEP_START:${id}`)}${shot(`shot-${id}`)}${msg(`SHOWTIME_STEP:${id}:${ok ? 'True' : 'False'}`)}`).join('')}</robot>`
 
 describe('robot generator', () => {
-  const robot = generateRobot(script, {loginUrl: 'https://test.salesforce.com'})
-  it('logs in with CRT variables and never prints the password', () => {
-    expect(robot).toContain('${UAT_USERNAME}')
-    expect(robot).toContain('TypeSecret    Password    ${UAT_PASSWORD}')
-    expect(robot).not.toMatch(/Log\s+\$\{UAT_PASSWORD\}/)
+  const robot = generateRobot(script)
+  it('logs in with a one-time link and handles no password or username', () => {
+    expect(robot).toContain('GoTo    ${FRONTDOOR_URL}')
+    expect(robot).not.toMatch(/PASSWORD|TypeSecret|UAT_USERNAME/i)
+    expect(robot).not.toMatch(/Log\s+\$\{FRONTDOOR_URL\}/)
   })
   it('wraps every step with markers, a retry and a screenshot', () => {
     for (const s of script.steps) {
@@ -55,8 +55,7 @@ describe('robot generator', () => {
     expect(esc('a  b ${x}')).toBe('a b \\${x}')
     expect(esc('C:\\temp')).toBe('C:\\\\temp')
   })
-  it('is deterministic', () =>
-    expect(generateRobot(script, {loginUrl: 'https://test.salesforce.com'})).toBe(robot))
+  it('is deterministic', () => expect(generateRobot(script)).toBe(robot))
 })
 
 describe('output.xml parser', () => {
@@ -74,6 +73,14 @@ describe('output.xml parser', () => {
   })
   it('ignores screenshots outside a step', () => {
     expect(parseOutput(`<robot>${shot('stray')}</robot>`)).toEqual([])
+  })
+})
+
+describe('describeCommand hides the login link', () => {
+  it('masks FRONTDOOR_URL values', () => {
+    expect(describeCommand(['testing', 'build', 'run', '--variable', 'FRONTDOOR_URL:https://x/secret'])).toBe(
+      'agentia testing build run --variable FRONTDOOR_URL:***',
+    )
   })
 })
 
@@ -128,7 +135,7 @@ describe('recordShow (fake Agentia)', () => {
       copado: new Copado(client, root),
       crtProjectId: 1,
       crtJobId: 2,
-      loginUrl: 'https://test.salesforce.com',
+      frontdoor: async () => 'https://example.invalid/secur/frontdoor.jsp?sid=SECRET',
     })
     return {rec, client}
   }
@@ -145,6 +152,18 @@ describe('recordShow (fake Agentia)', () => {
     expect(frames).toHaveLength(script.steps.length)
     expect(frames[0]).toBe('01-open-accounts.png')
   })
+  it('passes the login link to the run as a variable, and never in the saved files', async () => {
+    const {client} = await run(script.steps.map((s) => [s.id, true] as [string, boolean]))
+    const buildCall = client.calls.find((c) => c[1] === 'build') as string[]
+    expect(buildCall).toContain('--variable')
+    expect(buildCall.join(' ')).toContain('FRONTDOOR_URL:https://example.invalid')
+    const saved = fs.readdirSync(path.join(root, '.showtime/shows/US-1'), {recursive: true}).join('\n')
+    expect(saved).not.toContain('SECRET')
+    for (const f of ['session.robot', 'recording.json']) {
+      expect(fs.readFileSync(path.join(root, '.showtime/shows/US-1', f), 'utf8')).not.toContain('SECRET')
+    }
+  })
+
   it('reports failed and missing steps', async () => {
     const {rec} = await run([
       [script.steps[0]!.id, true],

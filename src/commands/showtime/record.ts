@@ -7,6 +7,7 @@ import {Copado} from '../../agentia/copado.js'
 import {ShowtimeCommand} from '../../base-command.js'
 import {loadConfig} from '../../config.js'
 import {LockBusyError, withOrgLock} from '../../lock.js'
+import {getFrontdoorUrl} from '../../record/frontdoor.js'
 import {recordShow, type Recording, writeRobotFile} from '../../record/record.js'
 import {readScript} from '../../script/files.js'
 import {transition} from '../../store/lifecycle.js'
@@ -31,13 +32,13 @@ export default class RecordCommand extends ShowtimeCommand {
     const script = readScript(root, args.story)
 
     if (flags['dry-run']) {
-      const robot = writeRobotFile(root, script, config.loginUrl)
+      const robot = writeRobotFile(root, script)
       if (!this.jsonEnabled()) this.log(`Wrote ${path.relative(root, robot)}. Nothing was uploaded or run.`)
       return {robot}
     }
 
     const copado = new Copado(createAgentiaClient(root), root)
-    const robot = writeRobotFile(root, script, config.loginUrl)
+    const robot = writeRobotFile(root, script)
     if (!this.jsonEnabled())
       this.log(`Recording ${script.steps.length} steps in ${config.uatEnvironment} (about a minute)…`)
     let recording: Recording
@@ -49,7 +50,7 @@ export default class RecordCommand extends ShowtimeCommand {
           copado,
           crtProjectId: config.crtProjectId,
           crtJobId: config.crtJobId as number,
-          loginUrl: config.loginUrl,
+          frontdoor: () => getFrontdoorUrl(config.sfAlias),
         }),
       )
     } catch (e) {
