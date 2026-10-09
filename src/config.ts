@@ -27,7 +27,7 @@ export const DEFAULT_CONFIG: Omit<ShowtimeConfig, 'crtProjectId' | 'crtJobId'> =
   uatEnvironment: 'UAT-SFP',
   devEnvironment: 'INT-SFP',
   slack: {ownersChannel: '#uat-reviews', releaseChannel: '#release'},
-  voice: {name: 'Samantha', rate: 175},
+  voice: {name: 'Samantha', rate: 165},
   storyPrefix: 'Showtime Demo –',
 }
 
