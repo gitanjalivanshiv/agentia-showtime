@@ -1,0 +1,27 @@
+# Create the app from this file: https://api.slack.com/apps -> Create New App -> From manifest.
+# Full steps are in docs/slack-setup.md.
+display_information:
+  name: Showtime
+  description: Every feature demos itself. Watch a narrated demo of what changed, then approve it or ask for changes.
+  background_color: "#0b1220"
+  long_description: Showtime records a short narrated demo video of each feature when it reaches UAT, sends it here for the business owner to review, and writes the decision back to Copado. It never promotes or deploys anything; people do that.
+features:
+  bot_user:
+    display_name: Showtime
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - chat:write.public
+      - files:write
+      - files:read
+      - channels:read
+      - groups:read
+      - users:read
+settings:
+  interactivity:
+    is_enabled: true
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false
