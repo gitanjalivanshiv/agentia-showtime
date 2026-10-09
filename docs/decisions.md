@@ -51,3 +51,6 @@ Measured on the Showtime CRT project:
 Decision: record with B. Showtime generates a Robot Framework file from `script.yaml`, uploads it with `testing job upload --replace`, runs it, unpacks the zip, and maps screenshots to steps with `Log SHOWTIME_STEP:<id>` marker keywords found in `output.xml`.
 Highlight boxes: no element coordinates are available from the CLI. If wanted, a step can inject an outline onto the target element with `Execute JavaScript` just before `LogScreenshot`.
 Credentials: CRT variables `UAT_USERNAME` and `UAT_PASSWORD` (sensitive) are read by the robot; the password is typed with `TypeSecret`. Showtime never sees the value.
+
+## D14 — Incident: story promoted past UAT to Production-SFP (2026-10-09)
+Approved: INT-SFP → UAT-SFP (P00015, 2026-10-08). While fixing the demo layout I ran `work submit` / `work submit --deploy` again. After the first promotion the story's environment was already UAT-SFP, so Copado promoted UAT-SFP → Production-SFP (P00016 validated, P00017 completed, 2026-10-09). That environment name matches the playground rule "never touch production-like environments", and it was not approved. No further writes were made. Rule going forward: before any `submit`, read the story's `sourceEnvironmentName` and the promotion's destination; `--deploy` only with an explicit, named destination from the user.
