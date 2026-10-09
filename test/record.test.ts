@@ -44,8 +44,8 @@ describe('robot generator', () => {
       'GoTo    ${BASE}/lightning/o/Account/list',
     )
     expect(stepKeyword({...base, action: 'click', target: 'Save'})).toBe('ClickText    Save')
-    expect(stepKeyword({...base, action: 'type', target: 'Subject', value: 'Hi'})).toBe(
-      'TypeText    Subject    Hi',
+    expect(stepKeyword({...base, action: 'type', target: 'Subject', value: 'Hi'})).toMatch(
+      /^Run Keywords {4}TypeText {4}Subject {4}Hi {4}AND {4}Run Keyword And Ignore Error {4}ClickElement {4}.*slds-modal__title/,
     )
     expect(stepKeyword({...base, action: 'verify', target: 'Priority', value: 'High'})).toBe(
       'VerifyText    High',

@@ -37,7 +37,9 @@ export function stepKeyword(step: Step): string {
     case 'click':
       return `ClickText    ${target}`
     case 'type':
-      return `TypeText    ${target}    ${value ?? ''}`
+      // The form's first, auto-focused field leaves a lookup dropdown open while another field is typed into.
+      // Clicking the modal title afterwards closes it. Ignored (after 2 s) when there is no modal.
+      return `Run Keywords    TypeText    ${target}    ${value ?? ''}    AND    Run Keyword And Ignore Error    ClickElement    xpath=//h2[contains(@class,'slds-modal__title')]    timeout=2s`
     case 'verify': {
       // "High | VIP CUSTOMER" checks several texts on one screen.
       const texts = (step.value ?? step.target)
