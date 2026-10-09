@@ -6,6 +6,7 @@ import {execa} from 'execa'
 import type {AgentiaClient} from './agentia/client.js'
 import {Copado} from './agentia/copado.js'
 import {loadConfig} from './config.js'
+import {loadDotEnv} from './env.js'
 import {checkSfOrg} from './record/frontdoor.js'
 import {resolveFfmpeg} from './util/ffmpeg.js'
 
@@ -28,6 +29,8 @@ export interface DoctorDeps {
   sayVoices?: () => Promise<string[] | undefined>
   /** Checks the Salesforce CLI alias of the UAT org; injectable for tests. */
   sfOrg?: (alias: string) => Promise<{ok: boolean; detail: string}>
+  /** Calls Slack's auth.test with the bot token; injectable for tests. */
+  slackAuth?: (botToken: string) => Promise<{ok: boolean; detail: string}>
 }
 
 /** Names of keys in a .env file. Values are never read into results. */
@@ -49,6 +52,19 @@ async function listSayVoices(): Promise<string[] | undefined> {
     .split('\n')
     .map((l) => l.split(/\s{2,}/)[0]?.trim() ?? '')
     .filter(Boolean)
+}
+
+async function slackAuthTest(botToken: string): Promise<{ok: boolean; detail: string}> {
+  try {
+    const {WebClient} = await import('@slack/web-api')
+    const r = await new WebClient(botToken).auth.test()
+    return {ok: true, detail: `connected to ${r.team ?? 'the workspace'} as ${r.user ?? 'the app'}`}
+  } catch (e) {
+    return {
+      ok: false,
+      detail: `Slack rejected the token (${e instanceof Error ? e.message.slice(0, 80) : 'unknown error'})`,
+    }
+  }
 }
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
@@ -230,25 +246,42 @@ export async function runDoctor(deps: DoctorDeps): Promise<Check[]> {
     })
   }
 
-  // Slack arrives in Phase 6, so missing tokens warn instead of fail. Only key presence is checked.
-  const fromFile = envKeys(deps.root)
-  const missing = ['SLACK_BOT_TOKEN', 'SLACK_APP_TOKEN'].filter((k) => !env[k] && !fromFile.has(k))
-  add(
-    missing.length === 0
-      ? {
-          id: 'slack',
-          label: 'Slack tokens',
-          status: 'ok',
-          detail: 'present (connection is tested when the Review Hub starts)',
-        }
-      : {
-          id: 'slack',
-          label: 'Slack tokens',
-          status: 'warn',
-          detail: `${missing.join(', ')} not set`,
-          fix: 'Follow docs/slack-setup.md, then add the tokens to .env (never commit it).',
-        },
-  )
+  // Only key presence is read from .env; values never enter a result. With both tokens, check the connection.
+  loadDotEnv(deps.root, env)
+  const missing = ['SLACK_BOT_TOKEN', 'SLACK_APP_TOKEN'].filter((k) => !env[k])
+  if (missing.length > 0) {
+    add({
+      id: 'slack',
+      label: 'Slack',
+      status: 'warn',
+      detail: `${missing.join(', ')} not set`,
+      fix: 'Follow docs/slack-setup.md, then add the tokens to .env (never commit it).',
+    })
+  } else if (
+    !(env.SLACK_APP_TOKEN as string).startsWith('xapp-') ||
+    !(env.SLACK_BOT_TOKEN as string).startsWith('xoxb-')
+  ) {
+    add({
+      id: 'slack',
+      label: 'Slack',
+      status: 'fail',
+      detail: 'a token has the wrong shape (bot tokens start xoxb-, app tokens xapp-)',
+      fix: 'Copy the Bot User OAuth Token and the App-Level Token again (docs/slack-setup.md).',
+    })
+  } else {
+    const r = await (deps.slackAuth ?? slackAuthTest)(env.SLACK_BOT_TOKEN as string)
+    add(
+      r.ok
+        ? {id: 'slack', label: 'Slack', status: 'ok', detail: r.detail}
+        : {
+            id: 'slack',
+            label: 'Slack',
+            status: 'fail',
+            detail: r.detail,
+            fix: 'Reinstall the app to the workspace and copy the new Bot User OAuth Token into .env.',
+          },
+    )
+  }
 
   return checks
 }

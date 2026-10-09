@@ -13,7 +13,14 @@ export const configSchema = z.object({
   crtJobId: z.number().int().positive().optional(),
   /** Salesforce CLI alias of the UAT org. Recording logs in with a one-time link from `sf org open`. */
   sfAlias: z.string().min(1).default('showtime-uat'),
-  slack: z.object({ownersChannel: z.string().min(1), releaseChannel: z.string().min(1)}),
+  slack: z.object({
+    ownersChannel: z.string().min(1),
+    releaseChannel: z.string().min(1),
+    /** Slack member IDs allowed to approve or request changes. Empty or missing means anyone in the channel. */
+    approverIds: z.array(z.string()).optional(),
+  }),
+  /** Org URL for the "Open in UAT" button, e.g. https://example.my.salesforce.com. Optional. */
+  uatUrl: z.string().url().optional(),
   voice: z.object({name: z.string().min(1), rate: z.number().int().positive()}),
   storyPrefix: z.string().min(1).default('Showtime Demo –'),
 })

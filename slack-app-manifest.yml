@@ -3,7 +3,7 @@
 display_information:
   name: Showtime
   description: Every feature demos itself. Watch a narrated demo of what changed, then approve it or ask for changes.
-  background_color: "#0b1220"
+  background_color: '#0b1220'
   long_description: Showtime records a short narrated demo video of each feature when it reaches UAT, sends it here for the business owner to review, and writes the decision back to Copado. It never promotes or deploys anything; people do that.
 features:
   bot_user:

@@ -138,4 +138,23 @@ export class Copado {
     )
     return r.build?.data?.id
   }
+
+  /**
+   * Writes a Showtime note onto the story's Technical Specifications field, keeping everything already there.
+   * A write: the caller holds the org lock. Never touches the story's status.
+   */
+  async appendStoryNote(idOrName: string, merge: (existing: string | undefined) => string): Promise<void> {
+    const story = await this.getStory(idOrName)
+    await this.client.run(
+      [
+        'cicd',
+        'work',
+        'update',
+        story.id,
+        '--technical-specifications',
+        merge(story.technicalSpecifications),
+      ],
+      {cwd: this.cwd},
+    )
+  }
 }

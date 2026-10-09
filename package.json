@@ -21,6 +21,7 @@
   "dependencies": {
     "@oclif/core": "^4",
     "@slack/bolt": "^5.1.0",
+    "@slack/web-api": "^8.2.0",
     "execa": "^10.0.1",
     "fast-xml-parser": "^5.11.2",
     "fflate": "^0.8.3",

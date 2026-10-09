@@ -64,3 +64,11 @@ Each recording creates one Case on the VIP account. `examples/demo/reset.sh` (Ph
 
 ## D17 — Video rendering (2026-10-09)
 Cards (background, per-step caption/progress overlay, title, end) are HTML rendered to PNG by Playwright; ffmpeg composites the recorded screen with a slow zoom (1.0 → 1.06), delays the narration by 0.6 s, concatenates the segments and writes a 1080p MP4 plus a 960×540 preview. Encoding uses `-fflags +bitexact -map_metadata -1`, and two renders from scratch gave identical SHA-256 hashes. A render hash (script, frames, voice, ffmpeg version, card HTML) lets an unchanged story reuse its video. Holds: 7.5 s minimum per step, 5 s for the title and end cards, so 7 steps land near 65 s. Narration: macOS `say`, voice and rate from `.showtime/config.json` (default Samantha, 165 wpm), behind a `Tts` interface.
+
+## D18 — Slack review loop design (2026-10-09)
+- **Two messages, not one:** the MP4 is uploaded with `files.uploadV2` so it plays inline, and the review card with its buttons is posted straight after. A file upload cannot carry Block Kit buttons, and a `video` block needs an embeddable URL, which an uploaded file is not.
+- **Socket Mode** (Bolt) for button clicks and the modal, so no public URL is needed. `send` uses only the bot token (a plain Web API client); `serve` needs the bot and app-level tokens.
+- **Local record first:** a decision is written to `.showtime/shows/<story>/decision.json` and the lifecycle moves before Slack or Copado are touched. The card update, the release-channel notice, and the Copado note follow. A Copado problem (lock held by another project, or an error) leaves the decision intact and marks the note `pending` or `failed`.
+- **Write-back** is a dated "Showtime review" block appended to the story's Technical Specifications field (D4). Existing text is preserved; only older Showtime blocks are dropped if the 30000-character limit is reached. Status is never changed.
+- **Never promotes:** approval notifies the release channel and says promotion is theirs. No code path calls `submit`, `promote` or `done`.
+- **Clicks are idempotent:** a second click gets a private reply. Optional `slack.approverIds` limits who may decide.

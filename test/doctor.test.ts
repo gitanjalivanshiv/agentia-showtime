@@ -34,6 +34,7 @@ describe('doctor', () => {
       client: client(),
       sayVoices: voices,
       sfOrg: async () => ({ok: true, detail: 'ok'}),
+      slackAuth: async () => ({ok: true, detail: 'connected to Test as showtime'}),
       env: {},
     })
     expect(checks.filter((c) => c.status !== 'ok')).toEqual([])
@@ -154,5 +155,36 @@ describe('doctor: UAT org login', () => {
     })
     expect(byId(checks, 'uat-org')?.status).toBe('fail')
     expect(byId(checks, 'uat-org')?.fix).toContain('sf org login web --alias showtime-uat')
+  })
+})
+
+describe('doctor: Slack connection', () => {
+  const run = (envFile: string, slackAuth: (t: string) => Promise<{ok: boolean; detail: string}>) => {
+    fs.writeFileSync(path.join(root, '.env'), envFile)
+    return runDoctor({
+      root,
+      client: client(),
+      sayVoices: voices,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      slackAuth,
+      env: {},
+    })
+  }
+  it('fails with a fix when Slack rejects the token', async () => {
+    const checks = await run('SLACK_BOT_TOKEN=xoxb-bad\nSLACK_APP_TOKEN=xapp-ok\n', async () => ({
+      ok: false,
+      detail: 'Slack rejected the token',
+    }))
+    expect(byId(checks, 'slack')).toMatchObject({status: 'fail'})
+    expect(byId(checks, 'slack')?.fix).toContain('Reinstall')
+  })
+  it('fails when a token has the wrong shape, without calling Slack', async () => {
+    let called = false
+    const checks = await run(
+      'SLACK_BOT_TOKEN=nope\nSLACK_APP_TOKEN=xapp-ok\n',
+      async () => ((called = true), {ok: true, detail: ''}),
+    )
+    expect(byId(checks, 'slack')?.status).toBe('fail')
+    expect(called).toBe(false)
   })
 })

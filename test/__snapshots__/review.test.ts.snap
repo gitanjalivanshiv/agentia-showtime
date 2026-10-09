@@ -1,0 +1,223 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Block Kit payloads > approved card replaces the buttons with the outcome 1`] = `
+[
+  {
+    "text": {
+      "emoji": true,
+      "text": "🎬 Your feature is ready to review",
+      "type": "plain_text",
+    },
+    "type": "header",
+  },
+  {
+    "text": {
+      "text": "*VIP Case Escalation*
+US-1",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  {
+    "text": {
+      "text": "*What to check*
+• Accounts now have a VIP checkbox.
+• A new case on a VIP account is set to High priority automatically.
+• The case shows a VIP badge, so your team sees it at a glance.",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  {
+    "elements": [
+      {
+        "text": "▶️ Watch the 65-second demo above, then choose. Nothing is released until your release manager promotes it.",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  {
+    "type": "divider",
+  },
+  {
+    "text": {
+      "text": "✅ *Approved* by Priya at <!date^1791556320^{time}|14:32 UTC>",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+]
+`;
+
+exports[`Block Kit payloads > feedback modal carries the story in private_metadata 1`] = `
+{
+  "blocks": [
+    {
+      "text": {
+        "text": "*VIP Case Escalation*
+US-1",
+        "type": "mrkdwn",
+      },
+      "type": "section",
+    },
+    {
+      "block_id": "comment_block",
+      "element": {
+        "action_id": "comment",
+        "max_length": 1500,
+        "multiline": true,
+        "placeholder": {
+          "text": "For example: also escalate cases for Platinum accounts.",
+          "type": "plain_text",
+        },
+        "type": "plain_text_input",
+      },
+      "label": {
+        "text": "What should change?",
+        "type": "plain_text",
+      },
+      "type": "input",
+    },
+  ],
+  "callback_id": "showtime_changes_modal",
+  "close": {
+    "text": "Cancel",
+    "type": "plain_text",
+  },
+  "private_metadata": "US-1",
+  "submit": {
+    "text": "Send to the team",
+    "type": "plain_text",
+  },
+  "title": {
+    "text": "Request changes",
+    "type": "plain_text",
+  },
+  "type": "modal",
+}
+`;
+
+exports[`Block Kit payloads > release message reminds that promotion is a human step 1`] = `
+[
+  {
+    "text": {
+      "emoji": true,
+      "text": "✅ Approved for release",
+      "type": "plain_text",
+    },
+    "type": "header",
+  },
+  {
+    "text": {
+      "text": "*VIP Case Escalation*
+US-1
+<https://x/y|▶️ Watch the demo>",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  {
+    "elements": [
+      {
+        "text": "Approved by Priya at <!date^1791556320^{time}|14:32 UTC>",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  {
+    "text": {
+      "text": "👉 *Promotion is yours to run.* Showtime records decisions; it never promotes or deploys.",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+]
+`;
+
+exports[`Block Kit payloads > review card 1`] = `
+[
+  {
+    "text": {
+      "emoji": true,
+      "text": "🎬 Your feature is ready to review",
+      "type": "plain_text",
+    },
+    "type": "header",
+  },
+  {
+    "text": {
+      "text": "*VIP Case Escalation*
+US-1",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  {
+    "text": {
+      "text": "*What to check*
+• Accounts now have a VIP checkbox.
+• A new case on a VIP account is set to High priority automatically.
+• The case shows a VIP badge, so your team sees it at a glance.",
+      "type": "mrkdwn",
+    },
+    "type": "section",
+  },
+  {
+    "elements": [
+      {
+        "text": "▶️ Watch the 65-second demo above, then choose. Nothing is released until your release manager promotes it.",
+        "type": "mrkdwn",
+      },
+    ],
+    "type": "context",
+  },
+  {
+    "block_id": "showtime_review_US-1",
+    "elements": [
+      {
+        "action_id": "showtime_approve",
+        "style": "primary",
+        "text": {
+          "emoji": true,
+          "text": "✅ Approve",
+          "type": "plain_text",
+        },
+        "type": "button",
+        "value": "US-1",
+      },
+      {
+        "action_id": "showtime_changes",
+        "text": {
+          "emoji": true,
+          "text": "✏️ Request changes",
+          "type": "plain_text",
+        },
+        "type": "button",
+        "value": "US-1",
+      },
+      {
+        "action_id": "showtime_open_uat",
+        "text": {
+          "emoji": true,
+          "text": "🔗 Open in UAT",
+          "type": "plain_text",
+        },
+        "type": "button",
+        "url": "https://example.my.salesforce.com",
+      },
+    ],
+    "type": "actions",
+  },
+]
+`;
+
+exports[`Copado note > formats a readable, dated note 1`] = `
+"[Showtime review 2026-10-09 14:32 UTC]
+Decision: CHANGES REQUESTED
+By: Priya
+Comment: Also Platinum accounts
+Video: https://x/y
+[/Showtime review]"
+`;
