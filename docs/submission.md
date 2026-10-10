@@ -1,4 +1,19 @@
-# Submission notes (Copado Agentia Headless Virtual Hackathon, deadline Oct 26, 2026)
+# Submission notes (Agentia™ Headless Virtual Hackathon, deadline Oct 26, 2026)
+
+Event page: <https://developer.copado.com/hackathon>. The submission needs a title and abstract, the problem statement, the tools used, a public repository link, a short demo video and a slide deck. The text below is ready to paste.
+
+## Submission form text
+
+**Title:** Agentia Showtime: every feature demos itself
+
+**Abstract:** When a Salesforce user story reaches UAT in Copado, Showtime has a Robotic Testing robot walk through it in the UAT org, Copado AI write the narration, and sends a one-minute narrated video to the business owner in Slack with Approve and Request changes buttons. The decision is written back to the Copado story and, for changes, handed to the developer's AI agent through an Agent Skill and an MCP server. It is an Agentia CLI plugin built only on the public `agentia` binary. From "story is in UAT" to "video is in Slack" takes under two minutes with no manual step, and it never approves, promotes or deploys anything itself.
+
+**Problem statement:** UAT sign-off is where Salesforce releases stall. Business owners do not log into sandboxes, do not read user stories and do not know what to test, so stories wait days for "looks good." Showtime removes the browser tab and the click-through: the owner watches a minute of video and clicks once.
+
+**Tools used:** Agentia CLI (`cicd work`, `testing`, `ai agent ask`, `auth`; plugin framework oclif; Agent Skill; own MCP server), Copado Robotic Testing (QWeb / Robot Framework), Copado AI, Copado CICD pipeline, Salesforce CLI (one-time login link, demo data), Slack (Bolt, Socket Mode, Block Kit), Playwright (renders the video cards), FFmpeg, macOS `say`, TypeScript, zod, Vitest, GitHub Actions. Details in [NOTICE.md](../NOTICE.md).
+
+**Tested with:** `@copado/agentia-cli` 1.0.0-beta.2. The event page notes that commands, flags and behaviour may change without notice; every Agentia call is behind one adapter (`src/agentia/client.ts`), and the tests use a fake `agentia` binary with scrubbed fixtures.
+
 
 ## Pitch (three lines)
 Every feature demos itself. When a story reaches UAT, Showtime has a robot walk through it, Copado AI narrate it, and sends a one-minute video to the business owner in Slack. Their Approve or Request changes lands back on the Copado story.

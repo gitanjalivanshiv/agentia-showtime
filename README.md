@@ -44,7 +44,7 @@ It builds the plugin, renders a real narrated video from bundled screenshots of 
 
 ## Run it for real
 
-Prerequisites: the Agentia CLI with CICD, CRT and AI auth, the Salesforce CLI authorized for your UAT org (`sf org login web --alias showtime-uat …`), Node 20+, and a Slack workspace.
+Prerequisites: the Agentia CLI (tested with `@copado/agentia-cli` 1.0.0-beta.2) with CICD, CRT and AI auth, the Salesforce CLI authorized for your UAT org (`sf org login web --alias showtime-uat …`), Node 20+, and a Slack workspace.
 
 ```bash
 npm ci && npm run build
