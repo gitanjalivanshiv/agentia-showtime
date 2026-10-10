@@ -48,12 +48,11 @@ export interface StepSegment {
   lead: number
 }
 
-/** Background + slowly zooming screenshot + caption layer + narration. */
+/** Background + still screenshot + caption layer + narration. No zoom: it cropped the edges and read as a glitch. */
 export function stepSegmentArgs(s: StepSegment): string[] {
-  const frames = Math.round(s.dur * FPS)
   const {x, y, w, h} = WINDOW
   const filter = [
-    `[1:v]scale=${w * 2}:-2,zoompan=z='1+0.06*on/${frames}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=${w}x${h}:fps=${FPS}[z]`,
+    `[1:v]scale=${w}:${h}:flags=lanczos[z]`,
     `[0:v][z]overlay=${x}:${y}:shortest=1[b]`,
     `[b][2:v]overlay=0:0:shortest=1,format=yuv420p[v]`,
     audioChain(3, s.lead, s.dur),
@@ -71,6 +70,12 @@ export function stepSegmentArgs(s: StepSegment): string[] {
     s.dur.toFixed(3),
     '-i',
     s.bg,
+    '-loop',
+    '1',
+    '-framerate',
+    String(FPS),
+    '-t',
+    s.dur.toFixed(3),
     '-i',
     s.shot,
     '-loop',

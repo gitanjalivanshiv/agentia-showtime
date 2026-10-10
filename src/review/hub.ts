@@ -83,12 +83,26 @@ export async function startHub(o: HubOptions): Promise<Hub> {
   })
 
   app.action(ACTIONS.changes, async ({ack, body}) => {
-    await ack()
     const b = body as unknown as ClickBody
     const story = b.actions?.[0]?.value
-    if (!story || !b.trigger_id) return
-    if (!allowed(b.user.id) && b.channel) return reply(b.channel.id, b.user.id, {status: 'not-allowed'})
-    await gateway.openModal({triggerId: b.trigger_id, view: feedbackModal(story, info(story).feature)})
+    if (!story || !b.trigger_id) return void (await ack())
+    if (!allowed(b.user.id) && b.channel) {
+      await ack()
+      return reply(b.channel.id, b.user.id, {status: 'not-allowed'})
+    }
+    // Slack gives 3 seconds to open the modal: build it first, then acknowledge and open at the same time.
+    const view = feedbackModal(story, info(story).feature)
+    try {
+      await Promise.all([ack(), gateway.openModal({triggerId: b.trigger_id, view})])
+    } catch (e) {
+      o.log(`could not open the modal: ${e instanceof Error ? e.message : String(e)}`)
+      if (b.channel)
+        await gateway.postEphemeral({
+          channel: b.channel.id,
+          user: b.user.id,
+          text: 'Slack was too slow to open the form. Please click "Request changes" again.',
+        })
+    }
   })
 
   // The "Open in UAT" button is a link; Slack still sends an event that must be acknowledged.
@@ -112,6 +126,8 @@ export async function startHub(o: HubOptions): Promise<Hub> {
   })
 
   await app.start()
+  // Warm the HTTPS connection so the first click is as fast as the rest.
+  await app.client.auth.test().catch(() => undefined)
   o.log('Review Hub connected. Waiting for clicks. Press Ctrl+C to stop.')
   return {
     stop: async () => {

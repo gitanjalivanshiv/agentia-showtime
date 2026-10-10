@@ -13,6 +13,8 @@ import {cardSegmentArgs, concatArgs, previewArgs, stepSegmentArgs, stepStillArgs
 import {renderStills} from './stills.js'
 import {backgroundHtml, endCardHtml, overlayHtml, titleCardHtml} from './templates.js'
 
+/** Bump when the look of the video changes, so an old render is never reused for new code. */
+const RENDER_VERSION = 'v2-still-screens'
 const LEAD = 0.6
 const TAIL = 1
 /** Long enough to read the screen, short enough to hold attention: 7 steps land near 60 s. */
@@ -113,6 +115,7 @@ export async function renderShow(o: RenderOptions): Promise<RenderResult> {
   const ffVersion =
     (await execa(o.ffmpeg, ['-version'], {reject: false})).stdout?.toString().split('\n')[0] ?? ''
   const hash = sha(
+    RENDER_VERSION,
     JSON.stringify(o.script),
     ffVersion,
     o.tts.name,

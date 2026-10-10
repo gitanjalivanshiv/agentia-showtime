@@ -29,7 +29,7 @@ const FORWARD: Record<ShowState, ShowState[]> = {
   sent: ['scripted', 'recorded', 'narrated', 'rendered', 'sent', 'approved', 'changes_requested'],
   approved: ['announced'],
   // After changes are requested the developer fixes the story and a new round starts.
-  changes_requested: ['scripted', 'recorded', 'rendered', 'sent'],
+  changes_requested: ['scripted', 'recorded', 'narrated', 'rendered', 'sent'],
   announced: [],
 }
 

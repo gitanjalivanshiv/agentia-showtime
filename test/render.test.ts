@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 
-import {cardSegmentArgs, concatArgs, FPS, previewArgs, stepSegmentArgs} from '../src/edit/ffmpeg-cmd.js'
+import {cardSegmentArgs, concatArgs, previewArgs, stepSegmentArgs} from '../src/edit/ffmpeg-cmd.js'
 import {cardSeconds} from '../src/edit/render.js'
 import {backgroundHtml, endCardHtml, esc, overlayHtml, titleCardHtml, WINDOW} from '../src/edit/templates.js'
 import {introLine, narrate, OUTRO_LINE} from '../src/narrate/narrate.js'
@@ -25,10 +25,12 @@ describe('ffmpeg command builders', () => {
     dur: 6,
     lead: 0.6,
   }
-  it('builds a deterministic step segment with a slow zoom and delayed narration', () => {
+  it('builds a deterministic step segment with a still screen and delayed narration', () => {
     const args = stepSegmentArgs(seg)
     const filter = args[args.indexOf('-filter_complex') + 1] as string
-    expect(filter).toContain(`zoompan=z='1+0.06*on/${6 * FPS}'`)
+    expect(filter).not.toContain('zoompan')
+    expect(filter).toContain(`scale=${WINDOW.w}:${WINDOW.h}`)
+    expect(args.filter((a) => a === '-loop')).toHaveLength(3)
     expect(filter).toContain(`overlay=${WINDOW.x}:${WINDOW.y}`)
     expect(filter).toContain('adelay=600|600,apad=whole_dur=6.000')
     expect(args).toEqual(stepSegmentArgs(seg))

@@ -143,6 +143,10 @@ describe('lifecycle', () => {
     expect(() => transition(root, 'US-1', 'scripted')).not.toThrow()
     expect(() => transition(root, 'US-1', 'sent')).toThrow(/Cannot move/)
   })
+  it('lets a new round start after changes were requested, including a re-render', () => {
+    for (const to of ['scripted', 'recorded', 'narrated', 'rendered', 'sent'] as const)
+      expect(canMove('changes_requested', to)).toBe(true)
+  })
   it('only allows approval after sending', () => {
     expect(canMove('rendered', 'approved')).toBe(false)
     expect(canMove('sent', 'approved')).toBe(true)
