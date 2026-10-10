@@ -3,6 +3,8 @@
 .agents/
 .claude/
 .env
+.sf/
+.sfdx/
 .showtime-demo/
 .showtime-root
 .showtime/
