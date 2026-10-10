@@ -5,6 +5,17 @@ import {type DemoScript, scriptSchema} from './schema.js'
 
 export type Ask = (prompt: string) => Promise<string>
 
+/** Earlier-round comments from the business, taken from the Showtime notes on the story. */
+export function feedbackFrom(specs?: string): string | undefined {
+  const comments = [
+    ...(specs ?? '').matchAll(
+      /\[Showtime review[^\]]*\][\s\S]*?Decision: CHANGES REQUESTED[\s\S]*?Comment: (.+)/g,
+    ),
+  ].map((m) => (m[1] as string).trim())
+  if (comments.length === 0) return undefined
+  return `The business owner asked for these changes in earlier rounds, and the demo must now show that they are handled (use input that exercises them): ${comments.map((c) => `"${c}"`).join('; ')}`
+}
+
 export function buildPrompt(story: Story, uatEnvironment: string, hint?: string): string {
   const lines = [
     'You write short product demo scripts for a Salesforce Lightning feature that is ready for business sign-off.',
@@ -17,6 +28,7 @@ export function buildPrompt(story: Story, uatEnvironment: string, hint?: string)
     story.soThat && `So that: ${story.soThat}`,
     story.acceptanceCriteria && `Acceptance criteria: ${story.acceptanceCriteria}`,
     `The feature is deployed in the ${uatEnvironment} sandbox.`,
+    feedbackFrom(story.technicalSpecifications),
     hint && `Test data and hints: ${hint}`,
     '',
     'Return ONLY one JSON object, no markdown, in exactly this shape:',

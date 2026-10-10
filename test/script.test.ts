@@ -5,7 +5,13 @@ import path from 'node:path'
 import {afterEach, beforeEach, describe, expect, it} from 'vitest'
 
 import type {Story} from '../src/agentia/copado.js'
-import {buildPrompt, extractJson, generateScript, parseScriptYaml} from '../src/script/generate.js'
+import {
+  buildPrompt,
+  extractJson,
+  feedbackFrom,
+  generateScript,
+  parseScriptYaml,
+} from '../src/script/generate.js'
 import {estimateSeconds, scriptSchema} from '../src/script/schema.js'
 import {canMove, loadShow, transition} from '../src/store/lifecycle.js'
 
@@ -47,6 +53,32 @@ describe('prompt and JSON extraction', () => {
     expect(extractJson('Sure!\n```json\n{"a":1}\n```\nHope it helps')).toEqual({a: 1})
   })
   it('throws when there is no JSON', () => expect(() => extractJson('no json here')).toThrow())
+})
+
+describe('feedback in the prompt', () => {
+  const specs = `Spec: do X
+
+[Showtime review 2026-10-09 14:32 UTC]
+Decision: CHANGES REQUESTED
+By: Priya
+Comment: Also treat ASAP as urgent.
+[/Showtime review]
+
+[Showtime review 2026-10-10 09:00 UTC]
+Decision: APPROVED
+By: Priya
+[/Showtime review]`
+  it('lists only the change requests, not approvals', () => {
+    expect(feedbackFrom(specs)).toContain('"Also treat ASAP as urgent."')
+    expect(feedbackFrom(specs)).not.toContain('APPROVED')
+  })
+  it('says nothing when there is no feedback', () => {
+    expect(feedbackFrom(undefined)).toBeUndefined()
+    expect(feedbackFrom('Spec: do X')).toBeUndefined()
+  })
+  it('reaches the AI prompt', () => {
+    expect(buildPrompt({...story, technicalSpecifications: specs}, 'UAT-SFP')).toContain('ASAP')
+  })
 })
 
 describe('script schema', () => {

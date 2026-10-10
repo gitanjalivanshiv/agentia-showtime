@@ -1,0 +1,29 @@
+diff --git a/force-app/main/default/flows/Urgent_Case_Escalation.flow-meta.xml b/force-app/main/default/flows/Urgent_Case_Escalation.flow-meta.xml
+index b542d7a..527a613 100644
+--- a/force-app/main/default/flows/Urgent_Case_Escalation.flow-meta.xml
++++ b/force-app/main/default/flows/Urgent_Case_Escalation.flow-meta.xml
+@@ -30,7 +30,7 @@
+         <connector>
+             <targetReference>Set_High_Priority</targetReference>
+         </connector>
+-        <filterFormula>CONTAINS(LOWER({!$Record.Subject}), "urgent")</filterFormula>
++        <filterFormula>OR(CONTAINS(LOWER({!$Record.Subject}), "urgent"), CONTAINS(LOWER({!$Record.Subject}), "asap"))</filterFormula>
+         <object>Case</object>
+         <recordTriggerType>Create</recordTriggerType>
+         <triggerType>RecordBeforeSave</triggerType>
+diff --git a/force-app/main/default/objects/Case/fields/Urgent_Badge__c.field-meta.xml b/force-app/main/default/objects/Case/fields/Urgent_Badge__c.field-meta.xml
+index 4153432..c01051d 100644
+--- a/force-app/main/default/objects/Case/fields/Urgent_Badge__c.field-meta.xml
++++ b/force-app/main/default/objects/Case/fields/Urgent_Badge__c.field-meta.xml
+@@ -1,9 +1,9 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+     <fullName>Urgent_Badge__c</fullName>
+-    <description>Shows URGENT on cases whose subject says they are urgent.</description>
++    <description>Shows URGENT on cases whose subject says they are urgent or ASAP.</description>
+     <externalId>false</externalId>
+-    <formula>IF(CONTAINS(LOWER(Subject), &quot;urgent&quot;), &quot;URGENT&quot;, &quot;&quot;)</formula>
++    <formula>IF(OR(CONTAINS(LOWER(Subject), &quot;urgent&quot;), CONTAINS(LOWER(Subject), &quot;asap&quot;)), &quot;URGENT&quot;, &quot;&quot;)</formula>
+     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+     <label>Urgent Badge</label>
+     <required>false</required>

@@ -101,7 +101,7 @@ We tested the skill with real agent runs. The skill alone was not enough (the ag
 
 ## The sample app
 
-[`examples/demo`](examples/demo) is an invented "VIP Case Escalation" app with fictional data: a VIP checkbox and a Tier (Standard / Platinum) on Account, a record-triggered flow that sets High priority, a badge on Case, layouts and a permission set. `seed.sh` deploys it through Copado (asking before every write), `reset.sh` clears the demo Cases.
+[`examples/demo`](examples/demo) is an invented "VIP Case Escalation" app with fictional data: a VIP checkbox and a Tier (Standard / Platinum) on Account, a record-triggered flow that sets High priority, a badge on Case, layouts and a permission set. `seed.sh` deploys it through Copado (asking before every write), `reset.sh` clears the demo Cases. [`examples/demo/urgent`](examples/demo/urgent) is a second, smaller feature ("Urgent case escalation") used for the live two-round demo, with its round-2 fix as a patch; [`docs/demo-runbook.md`](docs/demo-runbook.md) is the on-camera sequence and `examples/demo/preflight.sh` checks the stage is set.
 
 ## Repository
 
