@@ -1,4 +1,5 @@
 import {createAgentiaClient} from '../../agentia/client.js'
+import {projectRoot} from '../../config.js'
 import {ShowtimeCommand} from '../../base-command.js'
 import {type Check, hasFailures, runDoctor} from '../../doctor.js'
 
@@ -10,7 +11,7 @@ export default class Doctor extends ShowtimeCommand {
   static override examples = ['<%= config.bin %> <%= command.id %>']
 
   async run(): Promise<{checks: Check[]; ok: boolean}> {
-    const root = process.cwd()
+    const root = projectRoot()
     const checks = await runDoctor({root, client: createAgentiaClient(root)})
     const ok = !hasFailures(checks)
     if (!this.jsonEnabled()) {

@@ -28,6 +28,8 @@ const decisionSchema = z.object({
   /** Whether the note reached the story in Copado. */
   copado: z.enum(['written', 'pending', 'failed']),
   copadoNote: z.string().optional(),
+  /** When the note reached Copado. Used to tell our own write apart from a later change to the story. */
+  copadoAt: z.string().optional(),
 })
 export type DecisionRecord = z.infer<typeof decisionSchema>
 

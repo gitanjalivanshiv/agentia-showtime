@@ -114,7 +114,12 @@ export async function applyDecision(deps: DecideDeps, input: DecideInput): Promi
 
   const note = formatNote({kind: input.kind, by, at, comment: input.comment, videoUrl: review.videoUrl})
   const copado = await writeBack(deps, input.story, note)
-  const final: DecisionRecord = {...base, copado, copadoNote: note}
+  const final: DecisionRecord = {
+    ...base,
+    copado,
+    copadoNote: note,
+    ...(copado === 'written' ? {copadoAt: now().toISOString()} : {}),
+  }
   saveDecision(deps.root, final)
   if (copado !== 'written') {
     await deps.gateway.postMessage({

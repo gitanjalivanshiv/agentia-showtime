@@ -16,9 +16,11 @@
     "/dist",
     "/oclif.manifest.json",
     "/skills",
-    "/bin"
+    "/bin",
+    "/examples/demo/script.fallback.yaml"
   ],
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@oclif/core": "^4",
     "@slack/bolt": "^5.1.0",
     "@slack/web-api": "^8.2.0",

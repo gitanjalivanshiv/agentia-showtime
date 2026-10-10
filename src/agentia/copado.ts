@@ -68,8 +68,9 @@ export class Copado {
     return this.client.run(['testing', 'project', 'list'], {cwd: this.cwd, schema: z.array(crtProjectSchema)})
   }
 
-  async listStories(): Promise<Story[]> {
-    const r = await this.client.run(['cicd', 'work', 'list'], {cwd: this.cwd, schema: workListSchema})
+  async listStories(o: {title?: string} = {}): Promise<Story[]> {
+    const args = ['cicd', 'work', 'list', '--page-size', '100', ...(o.title ? ['--title', o.title] : [])]
+    const r = await this.client.run(args, {cwd: this.cwd, schema: workListSchema})
     return r.data
   }
 

@@ -1,7 +1,7 @@
 import {ShowtimeCommand} from '../../base-command.js'
 import {createAgentiaClient} from '../../agentia/client.js'
 import {Copado} from '../../agentia/copado.js'
-import {loadConfig} from '../../config.js'
+import {loadConfig, projectRoot} from '../../config.js'
 import {loadDotEnv} from '../../env.js'
 import {startHub} from '../../review/hub.js'
 
@@ -12,7 +12,7 @@ export default class ServeCommand extends ShowtimeCommand {
   static override enableJsonFlag = false
 
   async run(): Promise<void> {
-    const root = process.cwd()
+    const root = projectRoot()
     const loaded = loadConfig(root)
     if (!loaded.ok) this.error(`${loaded.message}. Run \`agentia showtime init\` first.`, {exit: 1})
     loadDotEnv(root)

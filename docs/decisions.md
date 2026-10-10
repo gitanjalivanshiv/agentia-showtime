@@ -72,3 +72,12 @@ Cards (background, per-step caption/progress overlay, title, end) are HTML rende
 - **Write-back** is a dated "Showtime review" block appended to the story's Technical Specifications field (D4). Existing text is preserved; only older Showtime blocks are dropped if the 30000-character limit is reached. Status is never changed.
 - **Never promotes:** approval notifies the release channel and says promotion is theirs. No code path calls `submit`, `promote` or `done`.
 - **Clicks are idempotent:** a second click gets a private reply. Optional `slack.approverIds` limits who may decide.
+
+## D19 — Phase 7: run, watch, MCP, skill (2026-10-10)
+- **One pipeline:** `script`, `record`, `render` and `send` are plain functions in `src/pipeline.ts`; the commands, `run`, `watch` and the MCP server all call them. `runPipeline` stops at the first failing stage and names it.
+- **watch** finds stories titled `Showtime Demo –…` whose environment is the UAT environment and that are new, or that changed after "changes requested". Our own note on the story changes its last-modified time, so a 30 s margin after the note's write time is ignored. Two failed attempts stop retries (`failure.json`); a held shared lock is "try again next poll", never a failure.
+- **MCP:** `showtime_status`, `showtime_feedback`, `showtime_script_preview` (read) and `showtime_run` (write, plan first, `confirm: true` to apply). No tool approves, promotes or deploys. stdout carries only protocol; other plugins' warnings go to stderr (verified with a handshake).
+- **Skill acceptance test** (`claude -p` in the developer repo, write tools not allowed):
+  1. The skill alone was **not** enough: asked "what should happen next?" after a promotion, the agent answered from the project's own Copado workflow notes and never mentioned Showtime. A sharper description did not change that.
+  2. Adding a short managed block to the project's instruction file (`CLAUDE.md` for Claude Code, `AGENTS.md` otherwise, between `<!-- showtime:start/end -->`) did: the agent ran `showtime doctor` first, laid out the steps, asked before anything that writes, and refused to approve or promote. Same mechanism Agentia uses to name its own skills in AGENTS.md.
+  3. `install-skill` also writes `.showtime-root` in the developer repo so the CLI finds Showtime's state from there.

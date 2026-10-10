@@ -6,8 +6,16 @@ import {Flags} from '@oclif/core'
 import {createAgentiaClient} from '../../agentia/client.js'
 import {Copado} from '../../agentia/copado.js'
 import {ShowtimeCommand} from '../../base-command.js'
-import {configPath, configSchema, DEFAULT_CONFIG, saveConfig, type ShowtimeConfig} from '../../config.js'
+import {
+  configPath,
+  configSchema,
+  DEFAULT_CONFIG,
+  saveConfig,
+  type ShowtimeConfig,
+  projectRoot,
+} from '../../config.js'
 import {envKeys} from '../../doctor.js'
+import {installSkill} from '../../skill.js'
 
 export default class Init extends ShowtimeCommand {
   static override description =
@@ -42,13 +50,14 @@ export default class Init extends ShowtimeCommand {
     }),
     voice: Flags.string({description: 'macOS `say` voice', default: DEFAULT_CONFIG.voice.name}),
     rate: Flags.integer({description: 'Speech rate in words per minute', default: DEFAULT_CONFIG.voice.rate}),
+    'no-skill': Flags.boolean({description: 'Do not install the Agent Skill into .agents/skills'}),
     force: Flags.boolean({description: 'Overwrite an existing config'}),
     'dry-run': Flags.boolean({description: 'Show the config without writing it'}),
   }
 
   async run(): Promise<{config: ShowtimeConfig; path: string; written: boolean; missingEnv: string[]}> {
     const {flags} = await this.parse(Init)
-    const root = process.cwd()
+    const root = projectRoot()
     const file = configPath(root)
     if (fs.existsSync(file) && !flags.force && !flags['dry-run']) {
       this.error(`${path.relative(root, file)} already exists. Re-run with --force to overwrite it.`, {
@@ -100,12 +109,17 @@ export default class Init extends ShowtimeCommand {
     const missingEnv = ['SLACK_BOT_TOKEN', 'SLACK_APP_TOKEN'].filter((k) => !keys.has(k) && !process.env[k])
     const written = !flags['dry-run']
     if (written) saveConfig(root, config)
+    const skill = written && !flags['no-skill'] ? installSkill(root, 'agents') : undefined
 
     if (!this.jsonEnabled()) {
       this.log(written ? `Wrote ${path.relative(root, file)}` : 'Dry run: nothing written.')
       this.log(JSON.stringify(config, null, 2))
       if (missingEnv.length)
         this.log(`\nNot set yet (needed from Phase 6): ${missingEnv.join(', ')}. See .env.example.`)
+      if (skill) this.log(`Installed the Showtime skill in ${path.relative(root, skill)}`)
+      this.log(
+        'Register the MCP server with Claude Code (optional):\n  claude mcp add showtime -- agentia showtime mcp',
+      )
       this.log('\nNext: agentia showtime doctor')
     }
     return {config, path: file, written, missingEnv}

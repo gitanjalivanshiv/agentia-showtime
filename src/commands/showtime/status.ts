@@ -1,5 +1,6 @@
 import {Args} from '@oclif/core'
 
+import {projectRoot} from '../../config.js'
 import {ShowtimeCommand} from '../../base-command.js'
 import {listStories, showStatus, type ShowStatus} from '../../status.js'
 
@@ -13,7 +14,7 @@ export default class StatusCommand extends ShowtimeCommand {
 
   async run(): Promise<{shows: ShowStatus[]}> {
     const {args} = await this.parse(StatusCommand)
-    const root = process.cwd()
+    const root = projectRoot()
     const shows = (args.story ? [args.story] : listStories(root)).map((s) => showStatus(root, s))
     if (!this.jsonEnabled()) {
       if (shows.length === 0) this.log('No shows yet. Start with `agentia showtime script <story>`.')

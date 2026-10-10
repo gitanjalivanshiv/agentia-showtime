@@ -1,12 +1,12 @@
 import {Args, Flags} from '@oclif/core'
-import {WebClient} from '@slack/web-api'
 
+import {createAgentiaClient} from '../../agentia/client.js'
+import {Copado} from '../../agentia/copado.js'
 import {ShowtimeCommand} from '../../base-command.js'
-import {loadConfig} from '../../config.js'
-import {loadDotEnv} from '../../env.js'
+import {loadConfig, projectRoot} from '../../config.js'
+import {PipelineError, sendStory} from '../../pipeline.js'
 import {reviewBlocks, reviewFallback} from '../../review/payloads.js'
-import {renderedVideo, reviewInfo, sendReview} from '../../review/send.js'
-import {WebGateway, type WebClientLike} from '../../review/slack.js'
+import {renderedVideo, reviewInfo} from '../../review/send.js'
 import {readScript} from '../../script/files.js'
 
 export default class SendCommand extends ShowtimeCommand {
@@ -22,13 +22,13 @@ export default class SendCommand extends ShowtimeCommand {
 
   async run(): Promise<Record<string, unknown>> {
     const {args, flags} = await this.parse(SendCommand)
-    const root = process.cwd()
+    const root = projectRoot()
     const loaded = loadConfig(root)
     if (!loaded.ok) this.error(`${loaded.message}. Run \`agentia showtime init\` first.`, {exit: 1})
     const {config} = loaded
-    const script = readScript(root, args.story)
 
     if (flags['dry-run']) {
+      const script = readScript(root, args.story)
       const info = reviewInfo(script, renderedVideo(root, args.story).seconds, config.uatUrl)
       const payload = {
         channel: config.slack.ownersChannel,
@@ -39,19 +39,16 @@ export default class SendCommand extends ShowtimeCommand {
       return {dryRun: true, ...payload}
     }
 
-    loadDotEnv(root)
-    const token = process.env.SLACK_BOT_TOKEN
-    if (!token)
-      this.error('SLACK_BOT_TOKEN is not set. Follow docs/slack-setup.md, then add it to .env.', {exit: 1})
-    const gateway = new WebGateway(new WebClient(token) as unknown as WebClientLike)
-    const record = await sendReview({
-      root,
-      script,
-      gateway,
-      ownersChannel: config.slack.ownersChannel,
-      releaseChannel: config.slack.releaseChannel,
-      uatUrl: config.uatUrl,
-    })
+    let record
+    try {
+      record = await sendStory(
+        {root, config, copado: new Copado(createAgentiaClient(root), root)},
+        args.story,
+      )
+    } catch (e) {
+      if (e instanceof PipelineError) this.error(e.message, {exit: 1})
+      throw e
+    }
     if (!this.jsonEnabled())
       this.log(
         `Sent ${args.story} to ${config.slack.ownersChannel}. Run \`agentia showtime serve\` to receive the decision.`,

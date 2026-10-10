@@ -2,13 +2,12 @@ import path from 'node:path'
 
 import {Args, Flags} from '@oclif/core'
 
+import {createAgentiaClient} from '../../agentia/client.js'
+import {Copado} from '../../agentia/copado.js'
 import {ShowtimeCommand} from '../../base-command.js'
-import {loadConfig} from '../../config.js'
-import {renderShow, type RenderResult} from '../../edit/render.js'
-import {SayTts} from '../../narrate/tts.js'
-import {readScript} from '../../script/files.js'
-import {transition} from '../../store/lifecycle.js'
-import {resolveFfmpeg} from '../../util/ffmpeg.js'
+import {loadConfig, projectRoot} from '../../config.js'
+import type {RenderResult} from '../../edit/render.js'
+import {PipelineError, renderStory} from '../../pipeline.js'
 
 export default class RenderCommand extends ShowtimeCommand {
   static override id = 'showtime:render'
@@ -24,29 +23,20 @@ export default class RenderCommand extends ShowtimeCommand {
 
   async run(): Promise<RenderResult> {
     const {args, flags} = await this.parse(RenderCommand)
-    const root = process.cwd()
+    const root = projectRoot()
     const loaded = loadConfig(root)
     if (!loaded.ok) this.error(`${loaded.message}. Run \`agentia showtime init\` first.`, {exit: 1})
-    const ffmpeg = await resolveFfmpeg()
-    if (!ffmpeg) this.error('ffmpeg was not found. Run `agentia showtime doctor`.', {exit: 1})
-    const script = readScript(root, args.story)
-    const tts = new SayTts(loaded.config.voice.name, loaded.config.voice.rate)
-
-    if (!this.jsonEnabled())
-      this.log(
-        flags.stills ? 'Rendering review stills…' : `Narrating and rendering ${script.steps.length} steps…`,
+    if (!this.jsonEnabled()) this.log(flags.stills ? 'Rendering review stills…' : 'Narrating and rendering…')
+    let result: RenderResult
+    try {
+      result = await renderStory(
+        {root, config: loaded.config, copado: new Copado(createAgentiaClient(root), root)},
+        args.story,
+        {stillsOnly: flags.stills, force: flags.force},
       )
-    const result = await renderShow({
-      root,
-      script,
-      tts,
-      ffmpeg: ffmpeg.path,
-      stillsOnly: flags.stills,
-      force: flags.force,
-    })
-    if (!flags.stills && !result.reused) {
-      transition(root, args.story, 'narrated', `voice=${loaded.config.voice.name}`)
-      transition(root, args.story, 'rendered', `hash=${result.hash.slice(0, 12)}`)
+    } catch (e) {
+      if (e instanceof PipelineError) this.error(e.message, {exit: 1})
+      throw e
     }
     if (!this.jsonEnabled()) {
       if (flags.stills) this.log(`Stills in ${path.relative(root, path.dirname(result.stills[2] ?? ''))}`)
