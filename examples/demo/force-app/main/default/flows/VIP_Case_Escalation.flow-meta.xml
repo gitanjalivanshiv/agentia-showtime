@@ -30,7 +30,7 @@
         <connector>
             <targetReference>Set_High_Priority</targetReference>
         </connector>
-        <filterFormula>{!$Record.Account.VIP__c} = true</filterFormula>
+        <filterFormula>OR({!$Record.Account.VIP__c} = true, TEXT({!$Record.Account.Tier__c}) = "Platinum")</filterFormula>
         <object>Case</object>
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordBeforeSave</triggerType>
