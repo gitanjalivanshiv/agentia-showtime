@@ -1,28 +1,31 @@
 # Agentia commands used by Showtime
 
-Discovered with `--help` on `@copado/agentia-cli/1.0.0-beta.2`. Every call goes through `AgentiaClient` (spawn `agentia … --json`).
-Output is `{ result, status, transactionId }`; the CLI prints linked-plugin warnings on stderr/stdout lines starting with `›`, so strip them before parsing.
+Discovered with `--help` on `@copado/agentia-cli` 1.0.0-beta.2. Every call goes through `AgentiaClient` (spawn `agentia … --json`). The envelope is `{result, status, transactionId}` or `{error}`; the CLI prints other plugins' warnings on lines starting with `›`, so output is parsed from the first `{`.
 
 ## Auth (read-only)
-- `agentia auth get --crt --json` → `result.credentials[0].ready` (gate)
-- `agentia auth get --json` → CICD, CRT and AI credential status (values are masked)
+- `agentia auth get --crt --json` → `credentials[].ready` gates Robotic Testing.
+- `agentia auth get --json` → CICD, CRT and AI credential status (values are masked).
+- CRT credentials can be project-local: `agentia auth set --local --crt <pak> --crt-domain <domain> --crt-org <id>` (so other projects' auth is not disturbed).
 
 ## Copado stories
 | Need | Command | Notes |
 |---|---|---|
-| List / detect UAT | `cicd work list --json` | Paged (`pageSize` 25, `hasMore`). Fields: `name`, `title`, `status`, `owner`, `sourceEnvironmentName`, `pipelineId`, `lastModifiedDate`. "Reached UAT" = `sourceEnvironmentName` equals the configured UAT environment. |
-| Read | `cicd work get <id\|name> --json` | Same fields. Description/acceptance criteria were not in the sample (empty fields are omitted); verify on a story that has them. |
-| Create | `cicd work create` | Write. Needs lock. |
-| Write back | `cicd work update <id> …` | Write. Flags: `--status`, `--acceptance-criteria` (255), `--functional-requirements` (30000), `--technical-specifications` (30000), `--title`, `--priority`. No comment/note command exists. |
-| Promote | `cicd work submit --deploy` / `cicd promotion run` | Never called by Showtime (human decides). |
+| Find stories | `cicd work list --title <prefix> --page-size 100` | Fields used: `name`, `title`, `sourceEnvironmentName`, `lastModifiedDate`. "Reached UAT" = `sourceEnvironmentName` equals the configured UAT environment. |
+| Read | `cicd work get <name>` | Includes `technicalSpecifications` when set. |
+| Write back | `cicd work update <id> --technical-specifications <text>` | There is no comment command, so a dated Showtime block is appended to this field. Status is never changed. |
+| Create / set / publish / submit | `cicd work create`, `work set`, `work publish`, `work submit [--deploy]` | Used by `examples/demo/seed.sh`, never by Showtime itself. `submit` promotes to the story's **next** environment, so always read the destination first. |
 
 ## Robotic Testing
-- `testing project list|create|get`, `testing job create|run|download|files`, `testing build run|get|logs|list`
-- Live: `testing live start <job-id> -p <project> --json`, `execute --line "…"`, `screenshot -p <project> -o <file>`, `inspect`, `status`, `stop --yes`
-- `recorder` and `view` are CLI-only; not used.
+- `testing project list`, `testing job list -p <project>` (to find the "Showtime Recorder" job)
+- `testing job upload <job> -p <project> --replace <local>:<remote> --message <text>`
+- `testing build run <job> -p <project> --wait-for-result --timeout 900 --save-artifacts <file.zip> --variable NAME:VALUE` (Robot's `NAME:VALUE` format, not `NAME=VALUE`)
+- The artifact zip holds `output.xml`, `log.html`, `report.html`, `xunit_report.xml` and `screenshots/`.
+- `testing live screenshot` always returns an annotated overlay (see D13) and is not used.
 
 ## Copado AI
-- `ai agent ask --agent plan|build|test|release|operate|knowledge -p "<prompt>" --no-stream --json`
-- Response text is in `result.content`. Extra keys: `completed`, `dialogueId`, `requestId`, `warnings`.
-- Observed: ~7 s for a short prompt; `completed: false` plus an "AI stream ended before stream_complete" warning even though the content was whole. Treat `content` as the answer, validate it with zod.
-- Pass `--no-credential-sync` to suppress the "no CICD project default credential" warning.
+- `ai agent ask --agent plan --no-stream --no-credential-sync -p "<prompt>" --json`
+- The answer is in `result.content`. `completed: false` plus a "stream ended before stream_complete" warning appears even when the answer is whole, so the content is validated, not the flag. About 7–16 s.
+
+## Not Agentia, but used
+- `sf org open -o <alias> --url-only --json`: a one-time login link for the robot.
+- `sf org display`, `sf data query/create`: `doctor` and the demo seed/reset only.

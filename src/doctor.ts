@@ -225,9 +225,9 @@ export async function runDoctor(deps: DoctorDeps): Promise<Check[]> {
     add({
       id: 'say',
       label: 'Narration voice (macOS say)',
-      status: 'fail',
-      detail: '`say` is not available',
-      fix: 'Narration uses macOS `say`. Run on a Mac, or configure another voice provider.',
+      status: 'warn',
+      detail: '`say` is not available, so videos will have captions but no speech',
+      fix: 'On a Mac, narration uses the built-in voice. Elsewhere Showtime renders silent narration of the right length.',
     })
   } else if (loaded.ok && !voices.includes(loaded.config.voice.name)) {
     add({

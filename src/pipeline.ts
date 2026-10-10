@@ -8,7 +8,7 @@ import type {Copado} from './agentia/copado.js'
 import type {ShowtimeConfig} from './config.js'
 import {loadDotEnv} from './env.js'
 import {renderShow} from './edit/render.js'
-import {SayTts} from './narrate/tts.js'
+import {chooseTts} from './narrate/tts.js'
 import {getFrontdoorUrl} from './record/frontdoor.js'
 import {type Recording, recordShow} from './record/record.js'
 import {withOrgLock} from './lock.js'
@@ -145,7 +145,7 @@ export async function renderStory(
   const ffmpeg = await resolveFfmpeg()
   if (!ffmpeg) throw new PipelineError('render', 'ffmpeg was not found. Run `agentia showtime doctor`.')
   const script = readScript(c.root, story)
-  const tts = new SayTts(c.config.voice.name, c.config.voice.rate)
+  const tts = await chooseTts(c.config.voice, ffmpeg.path)
   const result = await renderShow({
     root: c.root,
     script,

@@ -8,7 +8,7 @@ import {cardSegmentArgs, concatArgs, previewArgs, stepSegmentArgs} from '../src/
 import {cardSeconds} from '../src/edit/render.js'
 import {backgroundHtml, endCardHtml, esc, overlayHtml, titleCardHtml, WINDOW} from '../src/edit/templates.js'
 import {introLine, narrate, OUTRO_LINE} from '../src/narrate/narrate.js'
-import {parseDuration, type Tts} from '../src/narrate/tts.js'
+import {chooseTts, parseDuration, speechSeconds, type Tts} from '../src/narrate/tts.js'
 import {parseScriptYaml} from '../src/script/generate.js'
 
 const script = parseScriptYaml(
@@ -127,5 +127,16 @@ describe('card timing', () => {
     expect(cardSeconds({id: 'a', text: '', file: '', seconds: 2}, true)).toBe(7.5)
     expect(cardSeconds({id: 'a', text: '', file: '', seconds: 10}, true)).toBeCloseTo(11.6)
     expect(cardSeconds({id: 'title', text: '', file: '', seconds: 2}, false)).toBe(5)
+  })
+})
+
+describe('silent narration', () => {
+  it('sizes silence to the words, at about 160 words a minute', () => {
+    expect(speechSeconds('one two three four five six seven eight')).toBeCloseTo(3, 1)
+    expect(speechSeconds('')).toBe(0)
+  })
+  it('is chosen when SHOWTIME_TTS=silent, without checking for a voice', async () => {
+    const tts = await chooseTts({name: 'Samantha', rate: 165}, 'ffmpeg', {SHOWTIME_TTS: 'silent'})
+    expect(tts.name).toBe('silent')
   })
 })

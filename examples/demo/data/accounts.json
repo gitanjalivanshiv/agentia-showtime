@@ -1,6 +1,32 @@
 {
   "records": [
-    {"attributes": {"type": "Account", "referenceId": "VipRef"}, "Name": "Stellar Widgets (fictional VIP)", "VIP__c": true, "Industry": "Manufacturing"},
-    {"attributes": {"type": "Account", "referenceId": "NormalRef"}, "Name": "Everyday Gadgets (fictional)", "VIP__c": false, "Industry": "Retail"}
+    {
+      "attributes": {
+        "type": "Account",
+        "referenceId": "VipRef"
+      },
+      "Name": "Stellar Widgets (fictional VIP)",
+      "VIP__c": true,
+      "Industry": "Manufacturing"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "referenceId": "NormalRef"
+      },
+      "Name": "Everyday Gadgets (fictional)",
+      "VIP__c": false,
+      "Industry": "Retail"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "referenceId": "PlatinumRef"
+      },
+      "Name": "Aurora Platinum Partners (fictional)",
+      "Tier__c": "Platinum",
+      "VIP__c": false,
+      "Industry": "Finance"
+    }
   ]
 }

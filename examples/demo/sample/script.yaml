@@ -1,0 +1,51 @@
+# Showtime demo script. Edit freely: the recorder and narrator read exactly this file.
+# actions: navigate | click | type | verify | wait. Targets are visible labels, never selectors.
+version: 1
+story:
+  name: US-DEMO-001
+  title: Showtime Demo – VIP Case Escalation (Platinum)
+source: ai
+feature: VIP Case Escalation Automatically Sets High Priority
+summary:
+  - Confirm a new case on a Platinum account is automatically set to High priority
+  - Confirm the case shows the PLATINUM CUSTOMER badge so agents can spot it instantly
+  - Confirm the escalation happens without any manual steps from the service manager
+steps:
+  - id: navigate-accounts
+    action: navigate
+    target: Accounts
+    caption: Opening the Accounts list
+    narration: Let's start on the Accounts list, where all your customer accounts live.
+  - id: open-aurora-account
+    action: click
+    target: Aurora Platinum Partners (fictional)
+    caption: Opening a Platinum tier account
+    narration: Here is Aurora Platinum Partners, one of your top tier Platinum customers.
+  - id: click-new-case
+    action: click
+    target: New Case
+    caption: Creating a new case for this account
+    narration: Now let's log a new case for this customer, just like your team does every day.
+  - id: type-case-subject
+    action: type
+    target: Subject
+    value: Order portal is down
+    caption: Describing the customer's issue
+    narration: We'll describe the issue as Order portal is down, a problem that needs fast attention.
+  - id: save-case
+    action: click
+    target: Save
+    caption: Saving the new case
+    narration: Saving the case lets your system automatically apply the right priority and badge.
+  - id: open-new-case
+    action: click
+    target: was created
+    caption: Opening the newly created case
+    narration: Let's open the case we just created to see how it was handled.
+  - id: verify-priority-badge
+    action: verify
+    target: Priority
+    value: High | PLATINUM CUSTOMER
+    caption: Confirming High priority and Platinum badge
+    narration: Here it is, Priority set to High and a clear PLATINUM CUSTOMER badge, with no manual work
+      needed.

@@ -188,3 +188,18 @@ describe('doctor: Slack connection', () => {
     expect(called).toBe(false)
   })
 })
+
+describe('doctor: no voice on this machine', () => {
+  it('warns instead of failing', async () => {
+    saveConfig(root, configSchema.parse({...DEFAULT_CONFIG, crtProjectId: 1001, crtJobId: 2001}))
+    const checks = await runDoctor({
+      root,
+      client: client(),
+      sayVoices: async () => undefined,
+      sfOrg: async () => ({ok: true, detail: 'ok'}),
+      slackAuth: async () => ({ok: true, detail: 'ok'}),
+      env: {},
+    })
+    expect(byId(checks, 'say')?.status).toBe('warn')
+  })
+})

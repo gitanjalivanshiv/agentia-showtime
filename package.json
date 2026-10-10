@@ -66,6 +66,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "shx rm -f oclif.manifest.json",
     "prepack": "npm run build && oclif manifest",
-    "postpack": "npm run clean"
+    "postpack": "npm run clean",
+    "demo:offline": "bash examples/demo/try-offline.sh"
   }
 }

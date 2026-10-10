@@ -1,0 +1,41 @@
+{
+  "story": "US-DEMO-001",
+  "steps": [
+    {
+      "id": "navigate-accounts",
+      "ok": true,
+      "frame": "frames/01-navigate-accounts.png"
+    },
+    {
+      "id": "open-aurora-account",
+      "ok": true,
+      "frame": "frames/02-open-aurora-account.png"
+    },
+    {
+      "id": "click-new-case",
+      "ok": true,
+      "frame": "frames/03-click-new-case.png"
+    },
+    {
+      "id": "type-case-subject",
+      "ok": true,
+      "frame": "frames/04-type-case-subject.png"
+    },
+    {
+      "id": "save-case",
+      "ok": true,
+      "frame": "frames/05-save-case.png"
+    },
+    {
+      "id": "open-new-case",
+      "ok": true,
+      "frame": "frames/06-open-new-case.png"
+    },
+    {
+      "id": "verify-priority-badge",
+      "ok": true,
+      "frame": "frames/07-verify-priority-badge.png"
+    }
+  ],
+  "failed": []
+}
