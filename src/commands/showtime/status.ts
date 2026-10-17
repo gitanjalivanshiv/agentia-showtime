@@ -2,7 +2,7 @@ import {Args} from '@oclif/core'
 
 import {projectRoot} from '../../config.js'
 import {ShowtimeCommand} from '../../base-command.js'
-import {listStories, showStatus, type ShowStatus} from '../../status.js'
+import {isReadableNote, listStories, showStatus, type ShowStatus} from '../../status.js'
 
 export default class StatusCommand extends ShowtimeCommand {
   static override id = 'showtime:status'
@@ -23,7 +23,10 @@ export default class StatusCommand extends ShowtimeCommand {
           `${s.story}: ${s.state}${s.decision ? ` (${s.decision.kind.replace('_', ' ')} by ${s.decision.by}${s.secondsToDecision !== undefined ? `, ${Math.round(s.secondsToDecision / 60)} min after scripting` : ''}; Copado note ${s.decision.copado})` : ''}`,
         )
         if (s.decision?.comment) this.log(`   "${s.decision.comment}"`)
-        for (const h of s.history) this.log(`   ${h.at}  ${h.state}${h.note ? `  ${h.note}` : ''}`)
+        for (const h of s.history) {
+          const note = h.note && isReadableNote(h.note) ? `  ${h.note}` : ''
+          this.log(`   ${h.at.slice(11, 19)}  ${h.state}${note}`)
+        }
       }
     }
     return {shows}

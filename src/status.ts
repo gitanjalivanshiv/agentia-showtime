@@ -5,6 +5,12 @@ import {CONFIG_DIR} from './config.js'
 import {loadReview, loadDecision, type DecisionRecord} from './review/store.js'
 import {loadShow, type Show} from './store/lifecycle.js'
 
+/**
+ * Lifecycle notes are kept in full in show.json for debugging, but the human views hide the ones that are only
+ * identifiers (CRT build number, render hash, Slack channel ID): nothing to read there, and nothing to leak on a screen.
+ */
+export const isReadableNote = (note: string) => !/^(build|hash|channel)=/.test(note)
+
 export interface ShowStatus {
   story: string
   state: Show['state'] | 'unknown'

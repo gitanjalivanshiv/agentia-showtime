@@ -169,7 +169,10 @@ export function slackGateway(root: string): SlackGateway {
       'send',
       'SLACK_BOT_TOKEN is not set. Follow docs/slack-setup.md, then add it to .env.',
     )
-  return new WebGateway(new WebClient(token) as unknown as WebClientLike)
+  // SLACK_API_URL points the client at a stand-in server (rehearsals, tests). Unset, it is Slack.
+  return new WebGateway(
+    new WebClient(token, {slackApiUrl: process.env.SLACK_API_URL}) as unknown as WebClientLike,
+  )
 }
 
 export async function sendStory(
@@ -262,8 +265,8 @@ export function realStages(
       return {detail: `${r.seconds} s video${r.reused ? ' (unchanged)' : ''}`}
     },
     send: async (story) => {
-      const r = await sendStory(c, story, o.gateway)
-      return {detail: `sent to ${c.config.slack.ownersChannel} (${r.ts})`}
+      await sendStory(c, story, o.gateway)
+      return {detail: `sent to ${c.config.slack.ownersChannel}`}
     },
   }
 }

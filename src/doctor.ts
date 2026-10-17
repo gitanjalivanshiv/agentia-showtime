@@ -57,7 +57,7 @@ async function listSayVoices(): Promise<string[] | undefined> {
 async function slackAuthTest(botToken: string): Promise<{ok: boolean; detail: string}> {
   try {
     const {WebClient} = await import('@slack/web-api')
-    const r = await new WebClient(botToken).auth.test()
+    const r = await new WebClient(botToken, {slackApiUrl: process.env.SLACK_API_URL}).auth.test()
     return {ok: true, detail: `connected to ${r.team ?? 'the workspace'} as ${r.user ?? 'the app'}`}
   } catch (e) {
     return {
@@ -152,7 +152,7 @@ export async function runDoctor(deps: DoctorDeps): Promise<Check[]> {
       id: 'config',
       label: 'Showtime config',
       status: 'ok',
-      detail: `UAT ${cfg.uatEnvironment}, CRT project ${cfg.crtProjectId}`,
+      detail: `UAT ${cfg.uatEnvironment}, dev source ${cfg.devEnvironment}`,
     })
     const sf = await (deps.sfOrg ?? ((a: string) => checkSfOrg(a, env)))(cfg.sfAlias)
     add(

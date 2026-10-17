@@ -14,3 +14,6 @@ dist/
 docs/_help*.txt
 fixtures/raw/
 node_modules/
+
+# Private recording kit (scripts, cards, rehearsal fakes): never published
+local/

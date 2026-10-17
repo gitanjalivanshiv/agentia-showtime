@@ -76,6 +76,6 @@ export async function sendReview(o: SendOptions): Promise<ReviewRecord> {
     sentAt: now().toISOString(),
   }
   saveReview(o.root, record)
-  transition(o.root, story, 'sent', `channel=${channel}`, now())
+  transition(o.root, story, 'sent', `in ${o.ownersChannel}`, now())
   return record
 }

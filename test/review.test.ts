@@ -20,7 +20,7 @@ import {FakeGateway} from '../src/review/slack.js'
 import {feedbackPath, loadDecision, loadReview} from '../src/review/store.js'
 import {showDir} from '../src/script/files.js'
 import {parseScriptYaml} from '../src/script/generate.js'
-import {showStatus} from '../src/status.js'
+import {isReadableNote, showStatus} from '../src/status.js'
 import {loadShow, transition} from '../src/store/lifecycle.js'
 import {LockBusyError} from '../src/lock.js'
 
@@ -290,5 +290,19 @@ describe('.env loader', () => {
     expect(loadDotEnv(dir, env)).toEqual(['B'])
     expect(env).toEqual({A: 'keep', B: 'two'})
     fs.rmSync(dir, {recursive: true, force: true})
+  })
+})
+
+describe('human status view', () => {
+  it('hides identifier-only notes and keeps the readable ones', () => {
+    for (const hidden of ['build=688733', 'hash=2e6d91524a5c', 'channel=C0C784GQGPP'])
+      expect(isReadableNote(hidden)).toBe(false)
+    for (const shown of [
+      'source=ai',
+      'voice=Samantha',
+      'by=Priya',
+      'channel=#uat-reviews'.replace('channel=', 'to '),
+    ])
+      expect(isReadableNote(shown)).toBe(true)
   })
 })
