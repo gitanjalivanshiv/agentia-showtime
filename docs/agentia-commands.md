@@ -13,6 +13,7 @@ Discovered with `--help` on `@copado/agentia-cli` 1.0.0-beta.2. Every call goes 
 | Find stories | `cicd work list --title <prefix> --page-size 100` | Fields used: `name`, `title`, `sourceEnvironmentName`, `lastModifiedDate`. "Reached UAT" = `sourceEnvironmentName` equals the configured UAT environment. |
 | Read | `cicd work get <name>` | Includes `technicalSpecifications` when set. |
 | Write back | `cicd work update <id> --technical-specifications <text>` | There is no comment command, so a dated Showtime block is appended to this field. Status is never changed. |
+| Deployment finished? | `cicd promotion list --work-id <story record id> --page-size 50` | `--work-id` needs the record ID, not the `US-…` name. `work submit --deploy` returns while the deployment still runs, so before recording Showtime waits until the newest promotion into UAT has `status` `Completed`. |
 | Create / set / publish / submit | `cicd work create`, `work set`, `work publish`, `work submit [--deploy]` | Used by `examples/demo/seed.sh`, never by Showtime itself. `submit` promotes to the story's **next** environment, so always read the destination first. |
 
 ## Robotic Testing
