@@ -24,7 +24,7 @@ Live session (A): step-aligned by construction (execute a line, then screenshot)
 User approved: append a dated "Showtime review" block to the story's `--technical-specifications`; full log in `.showtime/`; release manager notified in Slack. Never touch `--status`.
 
 ## D6 — Pipeline shape (2026-10-07, from user screenshot)
-Dev1-SFP, Dev2-SFP → INT-SFP → UAT-SFP → Production-SFP; Hotfix-SFP → Production-SFP. UAT-SFP's source is INT-SFP. Mutant stories were seen on INT-SFP, so Showtime must not write there. Showtime dev source is still undecided.
+Dev1-SFP, Dev2-SFP → INT-SFP → UAT-SFP → Production-SFP; Hotfix-SFP → Production-SFP. UAT-SFP's source is INT-SFP. Another project's stories were seen on INT-SFP, so Showtime must not write there. Showtime dev source is still undecided.
 
 ## D7 — CRT project creation blocked (2026-10-07)
 `testing project create --name Showtime` returned HTTP 403 (TestingGatewayError). Lock was taken and released. No project exists. Likely the PAK lacks create-project permission; to be fixed in the CRT UI.
@@ -33,10 +33,10 @@ Dev1-SFP, Dev2-SFP → INT-SFP → UAT-SFP → Production-SFP; Hotfix-SFP → Pr
 Free workspace: 90-day visible history, up to 10 third-party/custom apps, 5 GB shared file storage, throttling of bursts of messages/files. Socket Mode: up to 10 connections, no plan restriction stated, not allowed on the public Marketplace (irrelevant for a hackathon). A free Slack Developer Program sandbox (Enterprise Grid, up to 10 sandboxes, 180 days, all paid features) is the best choice. Per-file upload size and inline playback of `files.uploadV2` video are not confirmed by these sources and must be tested.
 
 ## D9 — CRT lives on a different domain/org (2026-10-07)
-The 403 came from the globally stored CRT auth, which pointed at a different CRT domain and organization than the Showtime project. Showtime needs project-local CRT auth (`agentia auth set --local --crt <pak> --crt-domain <domain> --crt-org <org-id>`) so the global auth used by Time Machine and Mutant is not changed. Credentials are entered by the user, never by Claude.
+The 403 came from the globally stored CRT auth, which pointed at a different CRT domain and organization than the Showtime project. Showtime needs project-local CRT auth (`agentia auth set --local --crt <pak> --crt-domain <domain> --crt-org <org-id>`) so the global auth used by the other projects is not changed. Credentials are entered by the user, never by Claude.
 
 ## D10 — Environment ownership (2026-10-07)
-Time Machine used Dev1-SFP, Mutant used Dev2-SFP. Showtime's UAT is UAT-SFP (source INT-SFP). Showtime's dev source is still undecided. Playground rules file deferred by the user.
+Two other projects share the playground and use Dev1-SFP and Dev2-SFP. Showtime's UAT is UAT-SFP (source INT-SFP). Showtime's dev source is still undecided. Playground rules file deferred by the user.
 
 ## D11 — Plugin scaffolded by hand (2026-10-07)
 `npm init @copado/agentia-plugin` is interactive and exits on piped input, so the plugin layout was written by hand, mirroring the structure of the sibling Agentia plugins (oclif, ESM, `commands: ./dist/commands`, topic `showtime`). It links and runs with `agentia plugins link .`.

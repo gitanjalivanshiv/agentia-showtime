@@ -17,3 +17,6 @@ node_modules/
 
 # Private recording kit (scripts, cards, rehearsal fakes): never published
 local/
+
+# The internal build brief stays local
+/CLAUDE.md

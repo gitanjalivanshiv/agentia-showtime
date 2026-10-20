@@ -19,7 +19,7 @@ Two Slack messages in the owners channel: the video (plays inline) and a card wi
 ```
 [Showtime review 2026-10-09 14:32 UTC]
 Decision: CHANGES REQUESTED
-By: Priya
+By: Noor
 Comment: Also escalate cases for Platinum accounts.
 Video: https://…
 [/Showtime review]

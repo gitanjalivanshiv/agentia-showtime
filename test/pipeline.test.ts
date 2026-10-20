@@ -105,7 +105,7 @@ describe('watch', () => {
       copadoWith([
         story('US-1'),
         story('US-2', {sourceEnvironmentName: 'INT-SFP'}),
-        story('US-3', {title: 'Mutant Lab – x'}),
+        story('US-3', {title: 'Another Lab – x'}),
       ]),
       config,
       root,

@@ -2,11 +2,11 @@
 
 **Every feature demos itself.** When a user story reaches UAT in Copado, a robot walks through it in the UAT org, Copado AI writes the narration, and the business owner gets a one-minute demo video in Slack with **Approve** and **Request changes** buttons. Their decision lands back on the Copado story.
 
-> **How this is different:** tools like Fleet Radar alert Slack about failures, and Slacktia runs the CLI from a slash command. Showtime does neither: it closes the *business sign-off* loop, with a pipeline-made feature video, a human decision, and that decision flowing back into Copado.
+> **What it is not:** not an alerting tool, and not a chat front-end for the CLI. Showtime closes the *business sign-off* loop: a feature video the pipeline makes by itself, a human decision, and that decision flowing back into Copado.
 
 ![Showtime demo video, from the Platinum round](docs/demo.gif)
 
-*A 69-second narrated demo, made with no human in the loop: [`examples/demo/sample.mp4`](examples/demo/sample.mp4).*
+*A 67-second narrated demo, made with no human in the loop: [`examples/demo/sample.mp4`](examples/demo/sample.mp4).*
 
 ## The problem
 
@@ -25,11 +25,11 @@ flowchart LR
   G --> A
 ```
 
-Measured on the sample app: **from a story arriving in UAT to the video in Slack, 1 min 48 s, with no manual step.** In the end-to-end test the owner approved 5 minutes after the script was written.
+Measured in the recorded demo run: `watch` saw the round-two story in UAT and had **the video in Slack 79 seconds later, with nobody touching it**. The owner approved it about five minutes after that. (`agentia showtime status <story>` prints this timeline.)
 
 | | |
 |---|---|
-| ![Slack review card after Request changes](docs/slack-changes-requested.png) | The owner's card after **Request changes**: the comment is quoted, and it is also written to the Copado story and to `.showtime/feedback/<story>.md`. *(This screenshot is from the first round, before the video's zoom was removed.)* |
+| ![Slack review card after Request changes](docs/slack-changes-requested.png) | The owner's card after **Request changes**: the comment is quoted, and it is also written to the Copado story and to `.showtime/feedback/<story>.md`. *(An earlier round, before the video's zoom was removed; the reviewer's name is blurred.)* |
 
 ## Try it in five minutes, offline
 
@@ -64,7 +64,7 @@ agentia showtime watch
 |---|---|
 | `showtime init` / `doctor` | Create the config, check every dependency (Copado, CRT, UAT login, ffmpeg, voice, Slack) with fixes |
 | `showtime script <story>` | Copado AI writes steps and one narration line each; validated against a schema, with a hand-written fallback |
-| `showtime record <story>` | A Robotic Testing run in UAT, one clean screenshot per step |
+| `showtime record <story>` | Waits until the story's promotion into UAT has finished deploying, then a Robotic Testing run in UAT, one clean screenshot per step |
 | `showtime render <story>` | Narration, cards and captions assembled by ffmpeg; deterministic |
 | `showtime send <story>` | Video plus review card to the business owner in Slack (`--dry-run` prints it) |
 | `showtime run <story>` | The four stages above, one progress line each |
@@ -83,6 +83,7 @@ Showtime is an **Agentia CLI plugin** that uses only the public `agentia` binary
 | Agentia capability | Used for |
 |---|---|
 | `agentia cicd work list / get / update` | Detecting stories that reached UAT; reading them; writing the review note onto the story |
+| `agentia cicd promotion list` | Waiting until the promotion into UAT has finished deploying before recording |
 | `agentia testing job upload / build run / project` | Running the generated Robot Framework suite in UAT and collecting screenshots |
 | `agentia ai agent ask` | Writing the demo steps and narration from the story |
 | `agentia auth get` | Readiness gates (`doctor`) |
@@ -110,7 +111,7 @@ src/            plugin: commands, pipeline, review hub, MCP server
 skills/         the Showtime Agent Skill
 docs/           architecture, Agentia commands used, decisions (with the mistakes), Slack setup
 examples/demo/  sample app, seed / reset / try-offline scripts, sample screenshots and video
-test/           108 tests: schemas, state machine, Block Kit snapshots, ffmpeg commands, fake Copado and Slack
+test/           116 tests: schemas, state machine, Block Kit snapshots, ffmpeg commands, fake Copado and Slack
 ```
 
 `npm test` runs everything with fakes; CI also runs the offline demo. Licence: MIT. Third-party components: [NOTICE.md](NOTICE.md).
