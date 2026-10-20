@@ -39,6 +39,7 @@ export default class RecordCommand extends ShowtimeCommand {
       recording = await recordStory(
         {root, config, copado: new Copado(createAgentiaClient(root), root)},
         args.story,
+        (l) => this.jsonEnabled() || this.log(l),
       )
     } catch (e) {
       if (e instanceof LockBusyError) this.error(e.message, {exit: 2})

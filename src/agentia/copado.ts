@@ -47,6 +47,18 @@ export type CrtJob = z.infer<typeof crtJobSchema>
 
 const askSchema = z.object({content: z.string()}).passthrough()
 
+const promotionSchema = z
+  .object({
+    name: z.string(),
+    status: z.string().optional(),
+    destinationEnvironmentName: z.string().optional(),
+    isBackPromotion: z.boolean().optional(),
+    createdDate: z.string().optional(),
+  })
+  .passthrough()
+export type Promotion = z.infer<typeof promotionSchema>
+const promotionListSchema = z.object({data: z.array(promotionSchema)}).passthrough()
+
 export class Copado {
   constructor(
     private readonly client: AgentiaClient,
@@ -76,6 +88,16 @@ export class Copado {
 
   async getStory(idOrName: string): Promise<Story> {
     return this.client.run(['cicd', 'work', 'get', idOrName], {cwd: this.cwd, schema: storySchema})
+  }
+
+  /** Promotions that include a story. `--work-id` takes the story's record ID, not its name. Read-only. */
+  async storyPromotions(idOrName: string): Promise<Promotion[]> {
+    const story = await this.getStory(idOrName)
+    const r = await this.client.run(
+      ['cicd', 'promotion', 'list', '--work-id', story.id, '--page-size', '50'],
+      {cwd: this.cwd, schema: promotionListSchema},
+    )
+    return r.data
   }
 
   /** Single-turn Copado AI call. `content` is the answer; the CLI's `completed` flag is unreliable. */

@@ -9,6 +9,7 @@ import type {ShowtimeConfig} from './config.js'
 import {loadDotEnv} from './env.js'
 import {renderShow} from './edit/render.js'
 import {chooseTts} from './narrate/tts.js'
+import {waitForDeployment} from './record/deployment.js'
 import {getFrontdoorUrl} from './record/frontdoor.js'
 import {type Recording, recordShow} from './record/record.js'
 import {withOrgLock} from './lock.js'
@@ -116,11 +117,23 @@ export async function scriptStory(
   return {script, path: written ?? scriptPath(c.root, story.name), seconds, problems}
 }
 
-/** Runs the script in UAT with Robotic Testing. Holds the shared org lock for the upload and run. */
-export async function recordStory(c: StageContext, story: string): Promise<Recording> {
+/**
+ * Runs the script in UAT with Robotic Testing. First waits for the story's promotion into UAT to finish deploying,
+ * then holds the shared org lock for the upload and run.
+ */
+export async function recordStory(
+  c: StageContext,
+  story: string,
+  say: (l: string) => void = () => {},
+): Promise<Recording> {
   if (c.config.crtJobId === undefined)
     throw new PipelineError('record', 'No crtJobId in the config. Run `agentia showtime init --force`.')
   const script = readScript(c.root, story)
+  try {
+    await waitForDeployment(c.copado, story, c.config.uatEnvironment, {say})
+  } catch (e) {
+    throw new PipelineError('record', e instanceof Error ? e.message : String(e), e)
+  }
   const crtJobId = c.config.crtJobId
   const recording = await withOrgLock(`record ${story} (CRT upload and run)`, () =>
     recordShow({
@@ -252,7 +265,7 @@ export function realStages(
       return {detail: `${r.script.steps.length} steps, ${r.script.source}`}
     },
     record: async (story) => {
-      const r = await recordStory(c, story)
+      const r = await recordStory(c, story, o.say)
       if (r.failed.length)
         throw new PipelineError(
           'record',
