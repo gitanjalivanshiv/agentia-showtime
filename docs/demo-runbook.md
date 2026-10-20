@@ -5,10 +5,10 @@ The take is **one-shot**: promoting story A puts the feature in UAT, and a story
 ## What is staged
 | | |
 |---|---|
-| **Story A**, `US-0000038` "Urgent Case Escalation" | Published and validated in INT-SFP. A Case whose subject contains "urgent" gets High priority and an URGENT badge. **Not in UAT yet.** |
-| **Story B**, `US-0000039` "Urgent Case Escalation (ASAP)" | An empty shell in INT-SFP for round 2. |
+| **Story A**, `US-0000050` "Urgent Case Escalation" | Published and validated in INT-SFP. A Case whose subject contains "urgent" gets High priority and an URGENT badge. **Not in UAT yet.** |
+| **Story B**, `US-0000051` "Urgent Case Escalation (ASAP)" | An empty shell in INT-SFP for round 2. |
 | `examples/demo/urgent/round2.patch` | The fix for round 2 ("also treat ASAP as urgent"), verified with a check-only deploy. The agent should write it itself; this is the safety net. |
-| `.showtime/hints/US-0000038.txt`, `…39.txt` | Exact labels for the AI scriptwriter. |
+| `.showtime/hints/US-0000050.txt`, `…39.txt` | Exact labels for the AI scriptwriter. |
 
 ## Before you press record
 1. `examples/demo/preflight.sh` must say **Ready** (hub running, lock free, no leftover Cases, both stories waiting in INT-SFP, feature not in UAT).
@@ -20,12 +20,12 @@ The take is **one-shot**: promoting story A puts the feature in UAT, and a story
 | Time | What you do | What the viewer sees |
 |---|---|---|
 | 0:00 | Hook, to camera or voice-over: "Your feature is done. Now it waits four days for someone to click through UAT." | |
-| 0:20 | In Claude Code: *"US-0000038 is validated and waiting in INT-SFP. Promote it to UAT-SFP."* The agent states the destination and asks. Answer: *"Yes, INT-SFP to UAT-SFP."* | The agent runs `work submit --deploy`, checks all three jobs |
+| 0:20 | In Claude Code: *"US-0000050 is validated and waiting in INT-SFP. Promote it to UAT-SFP."* The agent states the destination and asks. Answer: *"Yes, INT-SFP to UAT-SFP."* | The agent runs `work submit --deploy`, checks all three jobs |
 | 0:50 | The agent, following the skill, offers the video: *"Showtime can send the business owner a demo. Shall I run it?"* Answer yes. (If `watch` is running instead, it starts by itself.) | The plan, then `showtime_run` |
 | 1:20 | Sped-up (about 8×): script → record in Salesforce → narrate → render → send. | One progress line per stage; the robot's screens |
 | 2:05 | Slack: the video plays inline in `#uat-reviews`. As the owner, click **✏️ Request changes** and type *"Also treat 'ASAP' as urgent."* | The card becomes "Changes requested" |
-| 2:45 | Claude Code: *"What did the business say about US-0000038?"* then *"Make that change on US-0000039, based on uat-sfp, then publish and validate. Tell me the destination before promoting."* | Agent reads the feedback, `work set US-0000039 --base-branch uat-sfp`, edits the flow and badge, commits, publishes, validates |
-| 3:30 | Answer: *"Yes, promote US-0000039 from INT-SFP to UAT-SFP."* Showtime then runs again by itself. | Round-2 video arrives; subject is "ASAP: …" |
+| 2:45 | Claude Code: *"What did the business say about US-0000050?"* then *"Make that change on US-0000051, based on uat-sfp, then publish and validate. Tell me the destination before promoting."* | Agent reads the feedback, `work set US-0000051 --base-branch uat-sfp`, edits the flow and badge, commits, publishes, validates |
+| 3:30 | Answer: *"Yes, promote US-0000051 from INT-SFP to UAT-SFP."* Showtime then runs again by itself. | Round-2 video arrives; subject is "ASAP: …" |
 | 4:15 | Slack: click **✅ Approve**. `#release` shows "Approved for release … promotion is yours to run." Show the dated note on the story in Copado. | Approved card; release message; Copado note |
 | 4:45 | Close: "Copado ships it. Showtime shows it." | |
 

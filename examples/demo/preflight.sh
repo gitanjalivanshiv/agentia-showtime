@@ -27,13 +27,13 @@ WAIT=$(agentia showtime watch --dry-run 2>/dev/null | grep -c "is in" || true)
 [ "$WAIT" = "0" ] && ok "watch: no story is waiting in UAT" || warn "watch: $WAIT story waiting in UAT; it will start a show as soon as you run watch"
 
 # The staged take: story A (round 1) and B (round 2) waiting in INT-SFP, and the feature not yet in UAT.
-A="${DEMO_STORY_A:-US-0000038}"; B="${DEMO_STORY_B:-US-0000039}"
+A="${DEMO_STORY_A:-US-0000050}"; B="${DEMO_STORY_B:-US-0000051}"
 for S in "$A" "$B"; do
   E=$(agentia cicd work get "$S" --json 2>/dev/null | json 'console.log(d.result.sourceEnvironmentName)')
   [ "$E" = "INT-SFP" ] && ok "$S is waiting in INT-SFP" || bad "$S is in '$E', not INT-SFP (the take is one-shot; see docs/demo-runbook.md)"
 done
 U=$(sf sobject describe --sobject Case -o "$ALIAS" --json 2>/dev/null | json 'console.log(d.result.fields.some(f=>f.name==="Urgent_Badge__c")?"yes":"no")')
-[ "$U" = "no" ] && ok "UAT does not have the urgent-case feature yet" || bad "UAT already has the urgent-case feature (the take has been used)"
+[ "$U" = "no" ] && ok "UAT does not have the urgent-case feature yet" || warn "UAT already has the urgent-case feature from an earlier take (the video looks the same)"
 
 [ -z "$(git status --porcelain)" ] && ok "repo has no uncommitted changes" || warn "repo has uncommitted changes"
 echo; [ "$FAIL" = "0" ] && echo "Ready." || echo "Fix the ✗ items first."
