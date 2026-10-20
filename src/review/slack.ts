@@ -51,8 +51,10 @@ export interface WebClientLike {
   }
 }
 
+const NAME_TTL_MS = 5 * 60 * 1000
+
 export class WebGateway implements SlackGateway {
-  private readonly names = new Map<string, string>()
+  private readonly names = new Map<string, {name: string; at: number}>()
   constructor(private readonly client: WebClientLike) {}
 
   async resolveChannel(nameOrId: string): Promise<string> {
@@ -115,12 +117,13 @@ export class WebGateway implements SlackGateway {
   }
 
   async displayName(userId: string): Promise<string> {
+    // Cached briefly only: the hub runs for days, and people rename themselves.
     const cached = this.names.get(userId)
-    if (cached) return cached
+    if (cached && Date.now() - cached.at < NAME_TTL_MS) return cached.name
     try {
       const u = (await this.client.users.info({user: userId})).user
       const name = u?.profile?.display_name || u?.real_name || u?.name || userId
-      this.names.set(userId, name)
+      this.names.set(userId, {name, at: Date.now()})
       return name
     } catch {
       return userId
