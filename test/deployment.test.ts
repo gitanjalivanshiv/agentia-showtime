@@ -52,7 +52,9 @@ describe('waitForDeployment', () => {
 
   it('refuses to record after a failed promotion or a timeout', async () => {
     await expect(
-      waitForDeployment(copadoReturning([promo('P', 'Completed with errors', 'b')]), 'US-1', 'UAT', {sleep: noSleep}),
+      waitForDeployment(copadoReturning([promo('P', 'Completed with errors', 'b')]), 'US-1', 'UAT', {
+        sleep: noSleep,
+      }),
     ).rejects.toThrow(/did not finish/)
     await expect(
       waitForDeployment(copadoReturning([promo('P', 'In Progress', 'b')]), 'US-1', 'UAT', {

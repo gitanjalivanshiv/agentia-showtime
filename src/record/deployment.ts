@@ -7,8 +7,7 @@ import type {Copado, Promotion} from '../agentia/copado.js'
  */
 
 export type DeploymentState =
-  | {state: 'none'}
-  | {state: 'done' | 'running' | 'failed'; promotion: string; status: string}
+  {state: 'none'} | {state: 'done' | 'running' | 'failed'; promotion: string; status: string}
 
 const FAILED = /error|fail|cancel|conflict|rolled ?back/i
 const DONE = /^(completed|validated)$/i
@@ -46,9 +45,13 @@ export async function waitForDeployment(
     const d = deploymentState(await copado.storyPromotions(story), uatEnvironment)
     if (d.state === 'none' || d.state === 'done') return d
     if (d.state === 'failed')
-      throw new Error(`The promotion of ${story} to ${uatEnvironment} did not finish (status "${d.status}"). Nothing was recorded.`)
+      throw new Error(
+        `The promotion of ${story} to ${uatEnvironment} did not finish (status "${d.status}"). Nothing was recorded.`,
+      )
     if (waited >= timeoutMs)
-      throw new Error(`The promotion of ${story} to ${uatEnvironment} is still "${d.status}" after ${Math.round(waited / 60_000)} min. Nothing was recorded.`)
+      throw new Error(
+        `The promotion of ${story} to ${uatEnvironment} is still "${d.status}" after ${Math.round(waited / 60_000)} min. Nothing was recorded.`,
+      )
     if (!told) {
       o.say?.(`Waiting for the deployment to ${uatEnvironment} to finish…`)
       told = true
